@@ -13,14 +13,15 @@ let foodDB = JSON.parse(localStorage.getItem('jm_food_db')) || [
 let currentClientId = ""; let waterIntake = 0; let codeReader = null; let isScannerOpen = false; let selectedFood = null;
 
 const dict = {
-  ar: { login: "تسجيل الدخول", planTitle: "📋 خطة الكوتش", progTitle: "متابعة اليوم", cal: "السعرات", pro: "البروتين", carb: "الكارب", fat: "الدهون", addTitle: "إضافة وجبة إضافية", addBtn: "إضافة الوجبة +", searchPlaceholder: "ابحث عن أكلة...", customTitle: "إضافة أكلة جديدة لقاعدتك", saveBtn: "حفظ بقاعدة البيانات", historyTitle: "سجل اليوم", resetBtn: "إعادة ضبط 🔄", reportTitle: "الماء والتقرير" },
-  en: { login: "Login", planTitle: "📋 Coach's Plan", progTitle: "Daily Progress", cal: "Calories", pro: "Protein", carb: "Carbs", fat: "Fats", addTitle: "Add Extra Meal", addBtn: "Add Meal +", searchPlaceholder: "Search food...", customTitle: "Add New Food to DB", saveBtn: "Save to DB", historyTitle: "Today's Log", resetBtn: "Reset 🔄", reportTitle: "Water & Report" }
+  ar: { login: "تسجيل الدخول", planTitle: "📋 مطلوب أكله اليوم:", progTitle: "الخطة ومتابعة اليوم", cal: "السعرات", pro: "البروتين", carb: "الكارب", fat: "الدهون", addTitle: "إضافة وجبة إضافية", addBtn: "إضافة الوجبة +", searchPlaceholder: "ابحث عن أكلة...", customTitle: "إضافة أكلة جديدة لقاعدتك", saveBtn: "حفظ بقاعدة البيانات", historyTitle: "سجل اليوم", resetBtn: "إعادة ضبط 🔄", reportTitle: "الماء والتقرير" },
+  en: { login: "Login", planTitle: "📋 Today's Plan:", progTitle: "Plan & Progress", cal: "Calories", pro: "Protein", carb: "Carbs", fat: "Fats", addTitle: "Add Extra Meal", addBtn: "Add Meal +", searchPlaceholder: "Search food...", customTitle: "Add New Food to DB", saveBtn: "Save to DB", historyTitle: "Today's Log", resetBtn: "Reset 🔄", reportTitle: "Water & Report" }
 };
 
 function showToast(msg) { const t = document.getElementById("toast"); t.innerText = msg; t.className = "show"; setTimeout(() => t.className = t.className.replace("show", ""), 3000); }
 
-// --- الإعدادات واللغة والذاكرة ---
+// --- الإعدادات والوضع الليلي ---
 function init() {
+    document.body.setAttribute('data-theme', appData.theme);
     document.documentElement.setAttribute('data-theme', appData.theme);
     document.getElementById('themeBtn').textContent = appData.theme === 'dark' ? '☀️' : '🌙';
     applyLang();
@@ -28,6 +29,7 @@ function init() {
 
 function toggleTheme() {
     appData.theme = appData.theme === 'dark' ? 'light' : 'dark';
+    document.body.setAttribute('data-theme', appData.theme);
     document.documentElement.setAttribute('data-theme', appData.theme);
     document.getElementById('themeBtn').textContent = appData.theme === 'dark' ? '☀️' : '🌙';
     localStorage.setItem('jm_app_data', JSON.stringify(appData));
@@ -74,7 +76,7 @@ function login() {
             if (data.status === 'success') {
                 currentClientId = id;
                 appData.target = { cal: data.calories, pro: data.protein, carb: data.carbs, fat: data.fats };
-                document.getElementById('coachPlanText').textContent = data.plan; // عرض خطة الكوتش
+                document.getElementById('coachPlanText').textContent = data.plan; 
                 document.getElementById('loginSection').style.display = 'none';
                 document.getElementById('dashboard').style.display = 'block';
                 renderProgress(); renderMealsUI(); showToast("تم الدخول!");
@@ -163,6 +165,13 @@ function addMeal() {
     renderProgress(); renderMealsUI(); showToast("تم إضافة الوجبة!");
 }
 
+function addMealToLog(name, cal, pro, carb, fat) {
+    const meal = { id: Date.now(), name: name, g: "AI", cal: Math.round(cal), pro: Math.round(pro), carb: Math.round(carb), fat: Math.round(fat), pinned: false };
+    appData.meals.push(meal);
+    localStorage.setItem('jm_app_data', JSON.stringify(appData));
+    renderProgress(); renderMealsUI();
+}
+
 function deleteMeal(id) { appData.meals = appData.meals.filter(m => m.id !== id); localStorage.setItem('jm_app_data', JSON.stringify(appData)); renderProgress(); renderMealsUI(); }
 function togglePin(id) { const m = appData.meals.find(x => x.id === id); if(m) { m.pinned = !m.pinned; localStorage.setItem('jm_app_data', JSON.stringify(appData)); renderMealsUI(); } }
 function resetDay() { if(!confirm("هل أنت متأكد؟ سيتم مسح الوجبات غير المثبتة.")) return; appData.meals = appData.meals.filter(m => m.pinned); localStorage.setItem('jm_app_data', JSON.stringify(appData)); renderProgress(); renderMealsUI(); }
@@ -195,13 +204,8 @@ async function saveDailyLog() {
             if(data.status === 'success') { showToast("تم الإرسال بنجاح 🚀"); document.getElementById('submitBtn').innerText = "إرسال التقرير للكوتش 🚀"; }
         });
 }
-fetch(`${SCRIPT_URL}?action=saveLog&clientId=${currentClientId}&water=${waterIntake}&notes=${encodeURIComponent(notes)}&photoUrl=${encodeURIComponent(photoUrl)}`)
-        .then(res => res.json()).then(data => {
-            if(data.status === 'success') { showToast("تم الإرسال بنجاح 🚀"); document.getElementById('submitBtn').innerText = "إرسال التقرير للكوتش 🚀"; }
-        });
-}
 
-// --- دالة الذكاء الاصطناعي السحرية (ده المكان الصح بتاعها) ---
+// --- دالة الذكاء الاصطناعي السحرية ---
 async function analyzeFoodAI(input) {
     const file = input.files[0];
     if (!file) return;
@@ -251,7 +255,5 @@ async function analyzeFoodAI(input) {
         }
     };
 }
-
-init(); // ده سطر تشغيل الأبليكيشن، خليه في الآخر خالص دايماً
 
 init();
