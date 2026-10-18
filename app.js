@@ -1,6 +1,5 @@
 // 1. ضع رابط Apps Script هنا
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz4-GZZKOGtj9SQSD_B68uXEggC3GHamdhrYgsJzTBL78xySzSdI94iPWUO4CnXjfkSpA/exec
-";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz4-GZZKOGtj9SQSD_B68uXEggC3GHamdhrYgsJzTBL78xySzSdI94iPWUO4CnXjfkSpA/exec";
 // 2. سجل مجاناً في api.imgbb.com للحصول على مفتاح مجاني لرفع الصور وضعه هنا
 const IMGBB_KEY = "3b5826821ec6486f42b5f719c97795ff";
 
