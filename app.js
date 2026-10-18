@@ -1,4 +1,4 @@
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx95M83LEMvUboB8gATLSIx-KpkzWuQhkaXMpkl53Z0dC5jvl7ETO4pfxo58sTeyApaRw/exec"; 
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyqY4lVP1T8OcJmZzwGWC6yjIGsx1Tm2bDLXVSZVn7c-ZbJajc1FicI-N25iuHdzseDrQ/exec"; 
 const IMGBB_KEY = "3b5826821ec6486f42b5f719c97795ff"; 
 
 let appData = JSON.parse(localStorage.getItem('jm_app_data')) || { theme: 'dark', lang: 'ar', meals: [], target: null };
