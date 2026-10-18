@@ -1,5 +1,5 @@
-const SCRIPT_URL = "YOUR_WEB_APP_URL"; 
-const IMGBB_KEY = "YOUR_IMGBB_API_KEY"; 
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx95M83LEMvUboB8gATLSIx-KpkzWuQhkaXMpkl53Z0dC5jvl7ETO4pfxo58sTeyApaRw/exec"; 
+const IMGBB_KEY = "3b5826821ec6486f42b5f719c97795ff"; 
 
 let appData = JSON.parse(localStorage.getItem('jm_app_data')) || { theme: 'dark', lang: 'ar', meals: [], target: null };
 let foodDB = JSON.parse(localStorage.getItem('jm_food_db')) || [
