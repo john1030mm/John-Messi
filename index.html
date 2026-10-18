@@ -1,96 +1,106 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تطبيق المتابعة | كوتش</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JM Tracker Pro</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://unpkg.com/@zxing/library@latest"></script>
 </head>
+<body data-theme="dark">
 
-<body>
-    <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
+<header>
+  <div class="brand">JM Tracker</div>
+  <div class="controls">
+    <button onclick="exportDB()" title="نسخ احتياطي">📥</button>
+    <button onclick="importDB()" title="استعادة">📤</button>
+    <button onclick="toggleLang()" id="langBtn">EN</button>
+    <button onclick="toggleTheme()" id="themeBtn">☀️</button>
+  </div>
+</header>
 
-    <div class="container">
-        <h1 style="color: var(--primary-color);">تطبيق المتابعة 🏆</h1>
+<div class="container">
+  
+  <div id="loginSection" class="card">
+    <h2 id="t_login">تسجيل الدخول</h2>
+    <input type="text" id="clientIdInput" placeholder="كود العميل">
+    <input type="password" id="clientPassInput" placeholder="كلمة المرور">
+    <button onclick="login()" id="loginBtn">دخول</button>
+  </div>
 
-        <div id="loginSection">
-            <input type="text" id="clientIdInput" placeholder="كود العميل">
-            <input type="password" id="clientPassInput" placeholder="كلمة المرور">
-            <button onclick="login()" id="loginBtn">تسجيل الدخول</button>
-        </div>
-
-        <div id="dashboard" style="display: none;">
-
-            <!-- الماكروز -->
-            <div class="section">
-                <h2>المتبقي لك اليوم</h2>
-                <div class="macros">
-                    <div class="box cal-box">سعرات<br><span id="calVal">0</span></div>
-                    <div class="box">بروتين<br><span id="proVal">0</span>g</div>
-                    <div class="box">كارب<br><span id="carbVal">0</span>g</div>
-                    <div class="box">دهون<br><span id="fatVal">0</span>g</div>
-                </div>
-            </div>
-
-            <!-- البحث عن الأكل وإضافته -->
-            <div class="section">
-                <h2>تسجيل الوجبات 🍽️</h2>
-                <div class="food-search">
-                    <input type="text" id="foodSearchInput" placeholder="ابحث بالإنجليزية (ex: chicken)">
-                    <button onclick="searchFood()">بحث</button>
-                </div>
-                <div id="foodResults" class="food-results"></div>
-
-                <p style="font-size:12px; color:gray; cursor:pointer;" onclick="toggleCustomFood()">+ إضافة طعام مخصص
-                    (غير موجود بالبحث)</p>
-
-                <div id="customFoodSection" style="display: none; text-align: right;">
-                    <input type="text" id="cName" placeholder="اسم الأكلة">
-                    <div style="display: flex; gap: 5px;">
-                        <input type="number" id="cCal" placeholder="سعرات">
-                        <input type="number" id="cPro" placeholder="بروتين">
-                        <input type="number" id="cCarb" placeholder="كارب">
-                        <input type="number" id="cFat" placeholder="دهون">
-                    </div>
-                    <button onclick="addCustomFood()" style="background-color: var(--primary-color);">إضافة
-                        للدايت</button>
-                </div>
-            </div>
-
-            <!-- بدائل الأكل -->
-            <div class="section">
-                <h2 onclick="toggleSubstitutes()" style="cursor: pointer; color: var(--primary-color);">🔄 عرض بدائل
-                    الأكل (اضغط هنا)</h2>
-                <div id="substitutesSection" style="display: none; text-align: right; font-size: 14px;">
-                    <b>بروتين:</b> 100 جم صدور دجاج = 120 جم سمك = 4 بياض بيض.<br>
-                    <b>كارب:</b> 100 جم رز = 100 جم مكرونة = 120 جم بطاطس.<br>
-                    <b>دهون:</b> 15 جم لوز = ملعقة زيت زيتون = ربع ثمرة أفوكادو.
-                </div>
-            </div>
-
-            <!-- المياه -->
-            <div class="section water-tracker">
-                <button onclick="updateWater(1)">+ ماء</button>
-                <span id="waterCount">0</span> أكواب
-                <button onclick="updateWater(-1)">- ماء</button>
-            </div>
-
-            <!-- إرفاق صورة التطور وملاحظات -->
-            <div class="section">
-                <h2>تحديث التطور 📸</h2>
-                <input type="file" id="progressPhoto" accept="image/*">
-                <textarea id="dailyNotes" placeholder="ملاحظات اليوم (مثال: أتممت الدايت بنسبة 90%)"></textarea>
-                <button onclick="saveDailyLog()" id="submitBtn">إرسال التقرير للكوتش</button>
-            </div>
-
-        </div>
+  <div id="dashboard" style="display: none;">
+    
+    <!-- خطة الكوتش المكتوبة -->
+    <div class="card" id="coachPlanCard" style="border: 2px solid var(--primary); background: rgba(0, 102, 238, 0.05);">
+      <h2 id="t_planTitle">📋 خطة الكوتش (مطلوب الالتزام بها)</h2>
+      <p id="coachPlanText" style="white-space: pre-wrap; font-weight: bold; line-height: 1.6;"></p>
     </div>
 
-    <!-- نظام الإشعارات الجديد (Toast) -->
-    <div id="toast"></div>
+    <!-- متابعة الماكروز -->
+    <div class="card">
+      <h2 id="t_progTitle">متابعة اليوم</h2>
+      <div class="progress-container"><div class="progress-label"><span id="t_cal">السعرات</span><span id="calText">0 / 0</span></div><div class="progress-bar"><div id="calBar" class="progress-fill"></div></div></div>
+      <div class="progress-container"><div class="progress-label"><span id="t_pro">البروتين</span><span id="protText">0 / 0g</span></div><div class="progress-bar"><div id="protBar" class="progress-fill"></div></div></div>
+      <div class="progress-container"><div class="progress-label"><span id="t_carb">الكارب</span><span id="carbText">0 / 0g</span></div><div class="progress-bar"><div id="carbBar" class="progress-fill"></div></div></div>
+      <div class="progress-container"><div class="progress-label"><span id="t_fat">الدهون</span><span id="fatText">0 / 0g</span></div><div class="progress-bar"><div id="fatBar" class="progress-fill"></div></div></div>
+    </div>
 
-    <script src="app.js"></script>
+    <!-- إضافة وجبة -->
+    <div class="card">
+      <h2 id="t_addTitle">إضافة وجبة إضافية / تتبع الجرامات</h2>
+      <div style="display:flex; gap:10px; position:relative;">
+        <input type="text" id="searchInput" oninput="handleSearch()" onfocus="handleSearch()" placeholder="ابحث عن أكلة..." style="flex:1;">
+        <div id="suggestions" class="suggestions"></div>
+        <button onclick="toggleScanner()" style="width:50px; padding:0; background:var(--success); font-size:1.2rem;">📷</button>
+      </div>
+
+      <div id="scannerContainer"><video id="scannerVideo"></video><div class="scanner-laser"></div><button onclick="toggleScanner()" style="background:var(--danger); margin-top:5px;">إغلاق الكاميرا</button></div>
+
+      <input type="number" id="gramsInput" placeholder="الكمية بالجرام (مثال: 150)">
+      <button onclick="addMeal()" id="t_addBtn">إضافة الوجبة +</button>
+    </div>
+
+    <!-- إضافة أكلة مخصصة -->
+    <div class="card" id="foodFormCard" style="display:none; border: 2px dashed var(--primary);">
+      <h2 id="t_customTitle">إضافة أكلة جديدة لقاعدتك (لكل 100 جم)</h2>
+      <input type="hidden" id="editFoodId">
+      <input type="text" id="foodName" placeholder="اسم الأكلة">
+      <div class="grid-2">
+        <input type="number" id="foodCal" placeholder="السعرات">
+        <input type="number" id="foodPro" placeholder="بروتين">
+        <input type="number" id="foodCarb" placeholder="كارب">
+        <input type="number" id="foodFat" placeholder="دهون">
+      </div>
+      <div style="display:flex; gap:10px;">
+        <button onclick="saveFoodDB()" id="t_saveFoodBtn">حفظ بقاعدة البيانات</button>
+        <button onclick="cancelEdit()" style="background:#888;">إلغاء</button>
+      </div>
+    </div>
+
+    <!-- سجل اليوم -->
+    <div class="card">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <h2 id="t_historyTitle" style="margin:0; border:none;">سجل اليوم</h2>
+        <button onclick="resetDay()" id="t_resetBtn" style="width:auto; padding:5px 10px; margin:0; background:var(--danger);">إعادة ضبط 🔄</button>
+      </div>
+      <div id="mealsList"></div>
+    </div>
+
+    <!-- التقرير النهائي -->
+    <div class="card">
+      <h2 id="t_reportTitle">الماء والتقرير</h2>
+      <div class="water-tracker">
+        <button onclick="updateWater(-1)">- كوب</button><span id="waterCount">0 💧</span><button onclick="updateWater(1)">+ كوب</button>
+      </div>
+      <input type="file" id="progressPhoto" accept="image/*" style="margin-top:15px;">
+      <textarea id="dailyNotes" placeholder="أكلت إيه بره الخطة؟ وإيه أخبار التزامك؟"></textarea>
+      <button onclick="saveDailyLog()" id="submitBtn" style="background:var(--success);">إرسال التقرير للكوتش 🚀</button>
+    </div>
+
+  </div>
+</div>
+
+<div id="toast"></div>
+<script src="app.js"></script>
 </body>
-
 </html>
