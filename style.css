@@ -1,168 +1,51 @@
 :root {
-    /* الوضع العادي - ألوان لبني وفاتح */
-    --bg-color: #e0f7fa;
-    --container-bg: #ffffff;
-    --text-color: #2c3e50;
-    --primary-color: #00bcd4;
-    /* لبني/أزرق فاتح */
-    --primary-hover: #0097a7;
-    --box-bg: #f5f5f5;
-    --border-color: #ddd;
+  --bg: #f4f7f6; --card-bg: #ffffff; --text: #333333; --border: #e0e0e0;
+  --primary: #0066EE; --danger: #e74c3c; --success: #2ecc71;
+  --bar-cal: linear-gradient(90deg, #ff9900, #ff5500);
+  --bar-pro: linear-gradient(90deg, #00c6ff, #0072ff);
+  --bar-carb: linear-gradient(90deg, #11998e, #38ef7d);
+  --bar-fat: linear-gradient(90deg, #f2c94c, #f2994a);
 }
+[data-theme="dark"] { --bg: #121212; --card-bg: #1e1e1e; --text: #e0e0e0; --border: #333; }
+body { font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; background: var(--bg); color: var(--text); padding-bottom: 40px; transition: 0.3s; }
+header { background: var(--card-bg); padding: 15px; border-bottom: 2px solid var(--primary); display: flex; justify-content: space-between; align-items: center; }
+.brand { font-size: 24px; font-weight: bold; color: var(--primary); }
+.controls button { background: transparent; border: 1px solid var(--border); color: var(--text); border-radius: 8px; padding: 5px 10px; cursor: pointer; margin-left: 5px;}
+.container { max-width: 650px; margin: auto; padding: 15px; }
+.card { background: var(--card-bg); padding: 20px; border-radius: 16px; margin-bottom: 20px; border: 1px solid var(--border); }
+h2 { font-size: 1.1rem; color: var(--primary); border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-top: 0;}
+input, textarea { width: 90%; padding: 12px; margin-top: 10px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg); color: var(--text); box-sizing: border-box; }
+button { background: var(--primary); color: white; border: none; padding: 12px; border-radius: 10px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 10px; }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
-[data-theme="dark"] {
-    /* الوضع الليلي */
-    --bg-color: #121212;
-    --container-bg: #1e1e1e;
-    --text-color: #f0f0f0;
-    --primary-color: #26c6da;
-    --primary-hover: #00bcd4;
-    --box-bg: #2d2d2d;
-    --border-color: #444;
-}
+/* Progress Bars */
+.progress-container { margin-bottom: 12px; }
+.progress-label { display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 5px; font-weight: bold;}
+.progress-bar { height: 12px; background: var(--border); border-radius: 6px; overflow: hidden; }
+.progress-fill { height: 100%; width: 0%; transition: width 0.8s; }
+#calBar { background: var(--bar-cal); } #protBar { background: var(--bar-pro); } #carbBar { background: var(--bar-carb); } #fatBar { background: var(--bar-fat); }
+.overlimit { background: var(--danger) !important; }
 
-body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: var(--bg-color);
-    color: var(--text-color);
-    margin: 0;
-    padding: 20px;
-    display: flex;
-    justify-content: center;
-    transition: background-color 0.3s;
-}
+/* Search Suggestions */
+.suggestions { position: absolute; top: 100%; left: 0; right: 0; background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; max-height: 200px; overflow-y: auto; z-index: 50; display: none; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+.suggestion-item { padding: 10px; cursor: pointer; border-bottom: 1px solid var(--border); font-size: 14px; }
+.suggestion-item:hover { background: var(--border); }
 
-.container {
-    background: var(--container-bg);
-    width: 100%;
-    max-width: 450px;
-    padding: 25px;
-    border-radius: 15px;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-    text-align: center;
-    position: relative;
-    transition: background-color 0.3s;
-}
+/* Meals */
+.meal-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid var(--border); background: var(--bg); margin-top: 10px; border-radius: 8px; }
+.meal-item.pinned { border: 1px solid var(--primary); background: rgba(0, 102, 238, 0.05); }
+.meal-macros { font-size: 0.8rem; opacity: 0.8; margin-top: 4px; }
+.meal-actions { display: flex; gap: 5px; }
+.pin-btn { background: transparent; color: var(--text); border: none; font-size: 1.2rem; width: auto; padding: 0 5px; margin: 0; }
+.meal-item.pinned .pin-btn { color: #f1c40f; }
+.delete-btn { background: var(--danger); width: 30px; height: 30px; padding: 0; border-radius: 50%; font-size: 0.8rem; margin: 0; }
 
-/* زر الوضع الليلي */
-.theme-toggle {
-    position: absolute;
-    top: 15px;
-    left: 15px;
-    background: none;
-    border: none;
-    font-size: 24px;
-    cursor: pointer;
-}
-
-.section {
-    border-top: 1px solid var(--border-color);
-    padding-top: 15px;
-    margin-top: 15px;
-}
-
-input,
-textarea {
-    width: 90%;
-    padding: 12px;
-    margin: 8px 0;
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    background: var(--container-bg);
-    color: var(--text-color);
-}
-
-button {
-    background-color: var(--primary-color);
-    color: white;
-    border: none;
-    padding: 12px 20px;
-    width: 95%;
-    border-radius: 8px;
-    font-size: 16px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: 0.3s;
-}
-
-button:hover {
-    background-color: var(--primary-hover);
-}
-
-.macros {
-    display: flex;
-    justify-content: space-between;
-    gap: 5px;
-}
-
-.box {
-    background: var(--box-bg);
-    padding: 10px 5px;
-    border-radius: 8px;
-    width: 24%;
-    font-size: 12px;
-    font-weight: bold;
-}
-
-.box span {
-    font-size: 16px;
-    color: var(--primary-color);
-}
-
-.cal-box span {
-    color: #ff5722;
-}
-
-/* تمييز السعرات */
-
-.food-search {
-    display: flex;
-    gap: 5px;
-}
-
-.food-search input {
-    width: 70%;
-}
-
-.food-search button {
-    width: 30%;
-}
-
-.food-item {
-    background: var(--box-bg);
-    padding: 10px;
-    margin-top: 5px;
-    border-radius: 5px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 13px;
-}
-
-.water-tracker button {
-    width: 80px;
-}
-
-/* الإشعارات (Toast) تجربة مستخدم رائعة */
-#toast {
-    visibility: hidden;
-    min-width: 250px;
-    background-color: #333;
-    color: #fff;
-    text-align: center;
-    border-radius: 8px;
-    padding: 16px;
-    position: fixed;
-    z-index: 1;
-    left: 50%;
-    bottom: 30px;
-    transform: translateX(-50%);
-    font-size: 15px;
-    opacity: 0;
-    transition: opacity 0.5s;
-}
-
-#toast.show {
-    visibility: visible;
-    opacity: 1;
-}
+/* Scanner */
+#scannerContainer { display: none; position: relative; width: 100%; max-width: 400px; margin: 10px auto; border-radius: 12px; overflow: hidden; border: 2px solid var(--primary); }
+#scannerVideo { width: 100%; display: block; background: #000; }
+.scanner-laser { position: absolute; top: 50%; left: 5%; width: 90%; height: 2px; background: var(--danger); box-shadow: 0 0 8px var(--danger); animation: laserMove 2s infinite ease-in-out; }
+@keyframes laserMove { 0% { top: 20%; } 50% { top: 80%; } 100% { top: 20%; } }
+.water-tracker { display: flex; justify-content: space-evenly; align-items: center; font-size: 1.2rem; font-weight: bold; }
+.water-tracker button { width: auto; padding: 10px 20px; }
+#toast { visibility: hidden; min-width: 250px; background-color: #333; color: #fff; text-align: center; border-radius: 8px; padding: 16px; position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 100; opacity: 0; transition: 0.5s; }
+#toast.show { visibility: visible; opacity: 1; }
