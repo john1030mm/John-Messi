@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>أونلاين كوتشينج - تطبيق العميل</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="container">
+        <h1>مرحباً بك يا بطل 🏋️‍♂️</h1>
+
+        <!-- شاشة تسجيل الدخول -->
+        <div id="loginSection">
+            <input type="text" id="clientIdInput" placeholder="أدخل كود العميل الخاص بك">
+            <input type="password" id="clientPassInput" placeholder="أدخل كلمة المرور">
+            <button onclick="login()" id="loginBtn">تسجيل الدخول</button>
+        </div>
+
+        <!-- شاشة الدايت والمتابعة (مخفية حتى يسجل الدخول) -->
+        <div id="dashboard" style="display: none;">
+            <h2>خطة التغذية</h2>
+            <div class="macros">
+                <div class="box">السعرات<br><span id="calVal">0</span></div>
+                <div class="box">بروتين<br><span id="proVal">0</span>g</div>
+                <div class="box">كارب<br><span id="carbVal">0</span>g</div>
+                <div class="box">دهون<br><span id="fatVal">0</span>g</div>
+            </div>
+
+            <h2>تتبع المياه 💧</h2>
+            <div class="water-tracker">
+                <button onclick="updateWater(1)">+ كوب</button>
+                <span id="waterCount">0</span> أكواب
+                <button onclick="updateWater(-1)">- كوب</button>
+            </div>
+
+            <h2>تقرير اليوم</h2>
+            <textarea id="dailyNotes" placeholder="سجل وجباتك هنا، وكيف كان التزامك اليوم؟"></textarea>
+            <button onclick="saveDailyLog()" id="submitBtn">إرسال التقرير للكوتش</button>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>
