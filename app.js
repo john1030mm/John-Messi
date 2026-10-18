@@ -1,4 +1,5 @@
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyqY4lVP1T8OcJmZzwGWC6yjIGsx1Tm2bDLXVSZVn7c-ZbJajc1FicI-N25iuHdzseDrQ/exec"; 
+const GEMINI_KEY = "AQ.Ab8RN6Ko0MIWGxECtes_XOAfxBpIBbBEoixANLl-aQZsZhiVaA"; // حط مفتاح جوجل هنا
 const IMGBB_KEY = "3b5826821ec6486f42b5f719c97795ff"; 
 
 let appData = JSON.parse(localStorage.getItem('jm_app_data')) || { theme: 'dark', lang: 'ar', meals: [], target: null };
@@ -194,5 +195,63 @@ async function saveDailyLog() {
             if(data.status === 'success') { showToast("تم الإرسال بنجاح 🚀"); document.getElementById('submitBtn').innerText = "إرسال التقرير للكوتش 🚀"; }
         });
 }
+fetch(`${SCRIPT_URL}?action=saveLog&clientId=${currentClientId}&water=${waterIntake}&notes=${encodeURIComponent(notes)}&photoUrl=${encodeURIComponent(photoUrl)}`)
+        .then(res => res.json()).then(data => {
+            if(data.status === 'success') { showToast("تم الإرسال بنجاح 🚀"); document.getElementById('submitBtn').innerText = "إرسال التقرير للكوتش 🚀"; }
+        });
+}
+
+// --- دالة الذكاء الاصطناعي السحرية (ده المكان الصح بتاعها) ---
+async function analyzeFoodAI(input) {
+    const file = input.files[0];
+    if (!file) return;
+
+    showToast("✨ جاري تحليل الطبق بالذكاء الاصطناعي... ثواني يا بطل ⏳");
+
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = async function () {
+        const base64Image = reader.result.split(',')[1];
+
+        const promptText = `أنت خبير تغذية. حلل صورة الطعام هذه. قدر حجم الحصة التقريبي بالجرامات، ثم احسب السعرات الحرارية، البروتين، الكربوهيدرات، والدهون. 
+        يجب أن ترد فقط بكود JSON صحيح بهذا الشكل دون أي نصوص إضافية أو علامات:
+        {"name": "اسم الوجبة بالعربي مع الكمية التقديرية", "cal": السعرات, "pro": البروتين, "carb": الكارب, "fat": الدهون}`;
+
+        const requestBody = {
+            contents: [{
+                parts: [
+                    { text: promptText },
+                    { inlineData: { mimeType: file.type, data: base64Image } }
+                ]
+            }]
+        };
+
+        try {
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(requestBody)
+            });
+
+            const data = await response.json();
+            
+            if (data.error) throw new Error("API Error");
+
+            let aiText = data.candidates[0].content.parts[0].text;
+            aiText = aiText.replace(/```json/g, "").replace(/```/g, "").trim();
+            const aiResult = JSON.parse(aiText);
+
+            addMealToLog("✨ " + aiResult.name, aiResult.cal, aiResult.pro, aiResult.carb, aiResult.fat);
+            
+            showToast("✅ الـ AI حلل طبقك وخصمه من الماكروز بنجاح!");
+
+        } catch (error) {
+            showToast("❌ الـ AI مقدرش يتعرف على الصورة بوضوح، صورها في إضاءة أحسن.");
+            console.error(error);
+        }
+    };
+}
+
+init(); // ده سطر تشغيل الأبليكيشن، خليه في الآخر خالص دايماً
 
 init();
