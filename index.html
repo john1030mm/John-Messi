@@ -47,20 +47,35 @@
 
     <!-- إضافة وجبة -->
     <div class="card">
-      <h2 id="t_addTitle">إضافة وجبة إضافية / تتبع الجرامات</h2>
+      <h2 id="t_addTitle">إضافة وجبة إضافية</h2>
+      
+      <!-- 1. مربع البحث وزرار الباركود -->
+      <div style="display:flex; gap:10px; position:relative;">
+        <input type="text" id="searchInput" oninput="handleSearch()" onfocus="handleSearch()" placeholder="ابحث عن أكلة..." style="flex:1;">
+        <div id="suggestions" class="suggestions"></div>
+        <button onclick="toggleScanner()" style="width:50px; padding:0; background:var(--success); font-size:1.2rem;" title="مسح الباركود">📷</button>
+      </div>
+
+      <!-- كاميرا الباركود (مخفية) -->
+      <div id="scannerContainer">
+        <video id="scannerVideo"></video>
+        <div class="scanner-laser"></div>
+        <button onclick="toggleScanner()" style="background:var(--danger); margin-top:5px;">إغلاق الكاميرا</button>
+      </div>
+
+      <!-- 2. الكمية وزرار الإضافة العادي -->
       <input type="number" id="gramsInput" placeholder="الكمية بالجرام (مثال: 150)">
       <button onclick="addMeal()" id="t_addBtn">إضافة الوجبة +</button>
 
-      <!-- زرار الذكاء الاصطناعي الجديد (هيتحط هنا) -->
+      <!-- 3. زرار الذكاء الاصطناعي -->
       <div style="margin-top: 15px; border-top: 1px dashed var(--border); padding-top: 15px;">
         <input type="file" id="aiImageInput" accept="image/*" capture="camera" style="display:none;" onchange="analyzeFoodAI(this)">
         <button onclick="document.getElementById('aiImageInput').click()" style="background: linear-gradient(90deg, #8e2de2, #4a00e0); color: white; border-radius: 12px; font-size: 1.1rem;">
           ✨ صوّر طبقك والـ AI هيحسبهالك
         </button>
       </div>
-
-    </div> <!-- دي قفلة الديف اللي كانت في سطر 51 عندك -->
-
+    </div>
+    
     <!-- إضافة أكلة مخصصة -->
     <div class="card" id="foodFormCard" style="display:none; border: 2px dashed var(--primary);">
       <div style="display:flex; gap:10px; position:relative;">
