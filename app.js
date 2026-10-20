@@ -2,10 +2,54 @@ const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw_NYegv4cshm2nnAdiR
 const GEMINI_KEY = "AQ.Ab8RN6Ko0MIWGxECtes_XOAfxBpIBbBEoixANLl-aQZsZhiVaA"; // حط مفتاح جوجل هنا
 const IMGBB_KEY = "3b5826821ec6486f42b5f719c97795ff"; 
 
-let appData = JSON.parse(localStorage.getItem('jm_app_data')) || { theme: 'dark', lang: 'ar', meals: [], target: null };
-let foodDB = JSON.parse(localStorage.getItem('jm_food_db')) || [];
+let appData = JSON.parse(localStorage.getItem('jm_app_data')) || { theme: 'dark', lang: 'ar', meals: [], target: null, dailyWorkouts: "" };
 
-let currentClientId = ""; let waterIntake = 0; let codeReader = null; let isScannerOpen = false; let selectedFood = null; let clientWorkoutsData = "";
+// --- قاعدة البيانات الضخمة (30 أكلة أساسية) ---
+const defaultFoods = [
+  {id: 1, name: "صدور دجاج مسلوق/مشوي", cal: 165, p: 31, c: 0, f: 3.6},
+  {id: 2, name: "أرز أبيض مطبوخ", cal: 130, p: 2.7, c: 28, f: 0.3},
+  {id: 3, name: "بيض مسلوق (بيضة كاملة)", cal: 155, p: 13, c: 1.1, f: 11},
+  {id: 4, name: "بياض بيض مسلوق", cal: 52, p: 11, c: 0.7, f: 0.2},
+  {id: 5, name: "شوفان", cal: 389, p: 17, c: 66, f: 7},
+  {id: 6, name: "موز", cal: 89, p: 1.1, c: 23, f: 0.3},
+  {id: 7, name: "بطاطس مسلوقة", cal: 87, p: 1.9, c: 20, f: 0.1},
+  {id: 8, name: "بطاطا حلوة مسلوقة", cal: 86, p: 1.6, c: 20, f: 0.1},
+  {id: 9, name: "تونة معلبة في ماء", cal: 116, p: 26, c: 0, f: 1},
+  {id: 10, name: "جبنة قريش", cal: 98, p: 11, c: 3.4, f: 4.3},
+  {id: 11, name: "فول مدمس", cal: 110, p: 7.6, c: 20, f: 0.5},
+  {id: 12, name: "عدس مطبوخ", cal: 116, p: 9, c: 20, f: 0.4},
+  {id: 13, name: "لحم مفروم (قليل الدسم)", cal: 250, p: 26, c: 0, f: 15},
+  {id: 14, name: "سمك بلطي مشوي", cal: 128, p: 26, c: 0, f: 2.7},
+  {id: 15, name: "مكرونة مسلوقة", cal: 158, p: 5.8, c: 31, f: 0.9},
+  {id: 16, name: "خبز بلدي (عيش مصري)", cal: 275, p: 9, c: 58, f: 1.5},
+  {id: 17, name: "حليب كامل الدسم", cal: 61, p: 3.2, c: 4.8, f: 3.3},
+  {id: 18, name: "حليب خالي الدسم", cal: 35, p: 3.4, c: 5, f: 0.1},
+  {id: 19, name: "لوز نيء", cal: 579, p: 21, c: 22, f: 50},
+  {id: 20, name: "فول سوداني", cal: 567, p: 26, c: 16, f: 49},
+  {id: 21, name: "زبدة فول سوداني", cal: 588, p: 25, c: 20, f: 50},
+  {id: 22, name: "زيت زيتون", cal: 884, p: 0, c: 0, f: 100},
+  {id: 23, name: "تفاح", cal: 52, p: 0.3, c: 14, f: 0.2},
+  {id: 24, name: "برتقال", cal: 47, p: 0.9, c: 12, f: 0.1},
+  {id: 25, name: "خيار", cal: 15, p: 0.7, c: 3.6, f: 0.1},
+  {id: 26, name: "طماطم", cal: 18, p: 0.9, c: 3.9, f: 0.2},
+  {id: 27, name: "زبادي يوناني (سادة)", cal: 97, p: 9, c: 4, f: 5},
+  {id: 28, name: "زبادي عادي", cal: 61, p: 3.5, c: 4.7, f: 3.3},
+  {id: 29, name: "واي بروتين سكوب", cal: 120, p: 24, c: 3, f: 1.5},
+  {id: 30, name: "تمر", cal: 282, p: 2.5, c: 75, f: 0.4}
+];
+
+let foodDB = JSON.parse(localStorage.getItem('jm_food_db')) || [];
+if (foodDB.length < 15) {
+    foodDB = defaultFoods;
+    localStorage.setItem('jm_food_db', JSON.stringify(foodDB));
+}
+
+let currentClientId = ""; 
+let waterIntake = 0; 
+let codeReader = null; 
+let isScannerOpen = false; 
+let selectedFood = null; 
+let clientWorkoutsData = "";
 
 function showToast(msg) { 
     const t = document.getElementById("toast"); t.innerText = msg; t.className = "show"; 
@@ -18,28 +62,21 @@ let currentTabIndex = 0;
 
 function switchTab(tabName, element) {
     currentTabIndex = tabsList.indexOf(tabName);
-    
-    // إخفاء الكل وإلغاء الأنيميشن
     document.querySelectorAll('.tab-content').forEach(tab => {
         tab.classList.remove('active');
         tab.style.animation = 'none'; 
     });
     document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
     
-    // إظهار الجديد مع الأنيميشن
     const activeTab = document.getElementById(`tab-${tabName}`);
     activeTab.classList.add('active');
-    void activeTab.offsetWidth; // Trigger Reflow
+    void activeTab.offsetWidth; 
     activeTab.style.animation = 'swipeAnim 0.4s cubic-bezier(0.25, 1, 0.5, 1) forwards';
     
     element.classList.add('active');
 }
 
-// ميزة السحب يمين وشمال للموبايل
-let touchstartX = 0;
-let touchstartY = 0;
-let touchendX = 0;
-let touchendY = 0;
+let touchstartX = 0; let touchstartY = 0; let touchendX = 0; let touchendY = 0;
 
 document.addEventListener('touchstart', function(e) {
     touchstartX = e.changedTouches[0].screenX;
@@ -55,21 +92,11 @@ document.addEventListener('touchend', function(e) {
 function handleSwipe() {
     const xDiff = Math.abs(touchendX - touchstartX);
     const yDiff = Math.abs(touchendY - touchstartY);
-    
-    // التأكد إن السحب بالعرض مش بالطول (عشان ميتعارضش مع الاسكرول لتحت)
     if (xDiff > yDiff && xDiff > 60) {
         if (touchendX < touchstartX) {
-            // سحب للشمال (التالي)
-            if(currentTabIndex < tabsList.length - 1) {
-                currentTabIndex++;
-                activateTabByIndex(currentTabIndex);
-            }
+            if(currentTabIndex < tabsList.length - 1) { currentTabIndex++; activateTabByIndex(currentTabIndex); }
         } else {
-            // سحب لليمين (السابق)
-            if(currentTabIndex > 0) {
-                currentTabIndex--;
-                activateTabByIndex(currentTabIndex);
-            }
+            if(currentTabIndex > 0) { currentTabIndex--; activateTabByIndex(currentTabIndex); }
         }
     }
 }
@@ -79,7 +106,22 @@ function activateTabByIndex(index) {
     switchTab(tabsList[index], navItems[index]);
 }
 
-// --- تسجيل الدخول وجلب البيانات ---
+// --- الإعدادات ---
+function init() {
+    document.body.setAttribute('data-theme', appData.theme);
+    document.documentElement.setAttribute('data-theme', appData.theme);
+    document.getElementById('themeBtn').textContent = appData.theme === 'dark' ? '☀️' : '🌙';
+}
+
+function toggleTheme() {
+    appData.theme = appData.theme === 'dark' ? 'light' : 'dark';
+    document.body.setAttribute('data-theme', appData.theme);
+    document.documentElement.setAttribute('data-theme', appData.theme);
+    document.getElementById('themeBtn').textContent = appData.theme === 'dark' ? '☀️' : '🌙';
+    localStorage.setItem('jm_app_data', JSON.stringify(appData));
+}
+
+// --- الدخول ---
 function login() {
     const id = document.getElementById('clientIdInput').value.trim(); const pass = document.getElementById('clientPassInput').value.trim();
     if (!id || !pass) return showToast("أدخل الكود وكلمة المرور!");
@@ -104,7 +146,7 @@ function login() {
         }).catch(err => showToast("خطأ في الاتصال بالخادم"));
 }
 
-// --- عرض التمارين بنظام (أيام الأسبوع الذكية) ---
+// --- التمارين ---
 function renderWorkoutsUI() {
     const container = document.getElementById('workoutsList');
     if (!clientWorkoutsData) {
@@ -119,11 +161,8 @@ function renderWorkoutsUI() {
     lines.forEach((line, index) => {
         if (!line.trim()) return;
         
-        // لو مفيش علامة | يبقى ده عنوان يوم (مثال: اليوم الأول: بنش)
         if (!line.includes('|')) {
-            if (currentDayOpen) html += `</div></details>`; // نقفل اليوم القديم
-            
-            // نفتح يوم جديد
+            if (currentDayOpen) html += `</div></details>`;
             html += `
             <details style="background: rgba(0,0,0,0.2); border: 1px solid var(--glass-border); border-radius: 15px; padding: 15px; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
                 <summary style="font-weight: bold; font-size: 1.2rem; color: var(--primary); cursor: pointer; list-style: none; display: flex; justify-content: space-between; align-items: center;">
@@ -136,14 +175,12 @@ function renderWorkoutsUI() {
             return;
         }
 
-        // لو فيه علامة | يبقى دي تمرينة
         const parts = line.split('|');
         const exName = parts[0] ? parts[0].trim() : `تمرين`;
         const setsCount = parseInt(parts[1]) || 3;
         const targetReps = parts[2] ? parts[2].trim() : "10-12";
         const videoUrl = parts[3] ? parts[3].trim() : "";
 
-        // لو المدرب كتب تمرينة ومكتبش اسم اليوم فوقيها، نفتحله يوم افتراضي
         if (!currentDayOpen) {
             html += `
             <details open style="background: rgba(0,0,0,0.2); border: 1px solid var(--glass-border); border-radius: 15px; padding: 15px; margin-bottom: 15px;">
@@ -166,7 +203,7 @@ function renderWorkoutsUI() {
             <div class="set-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 0.95rem;">
                 <span>المجموعة ${s}:</span>
                 <div class="set-inputs" style="display: flex; gap: 8px; width: 65%;">
-                    <input type="number" placeholder="وزن (كجم)" class="ex-weight" data-ex="${exName}" data-set="${s}" style="margin: 0; padding: 8px; text-align: center; border-radius: 8px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1);">
+                    <input type="number" placeholder="وزن(كجم)" class="ex-weight" data-ex="${exName}" data-set="${s}" style="margin: 0; padding: 8px; text-align: center; border-radius: 8px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1);">
                     <input type="number" placeholder="عدات" class="ex-reps" data-ex="${exName}" data-set="${s}" style="margin: 0; padding: 8px; text-align: center; border-radius: 8px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1);">
                 </div>
             </div>
@@ -179,12 +216,12 @@ function renderWorkoutsUI() {
     container.innerHTML = html;
 }
 
-// --- عرض وإغلاق فيديو التمرينة ---
 function openVideo(url) {
     const container = document.getElementById('videoContainer');
     let embedUrl = url;
     if (url.includes("watch?v=")) embedUrl = url.replace("watch?v=", "embed/");
     if (url.includes("youtu.be/")) embedUrl = url.replace("youtu.be/", "youtube.com/embed/");
+    if (url.includes("youtube.com/shorts/")) embedUrl = url.replace("youtube.com/shorts/", "youtube.com/embed/").split("?")[0]; 
     
     container.innerHTML = `<iframe width="100%" height="300" src="${embedUrl}" frameborder="0" allowfullscreen style="border-radius: 12px;"></iframe>`;
     document.getElementById('videoModal').style.display = 'flex';
@@ -195,9 +232,8 @@ function closeVideo() {
     document.getElementById('videoModal').style.display = 'none';
 }
 
-// --- حفظ الأوزان ---
 function saveWorkoutLog() {
-    let workoutNotes = "🏋️ أوزان التمارين المسجلة اليوم:\n";
+    let workoutText = "";
     const weights = document.querySelectorAll('.ex-weight');
     let hasData = false;
     
@@ -209,9 +245,8 @@ function saveWorkoutLog() {
         const reps = repsInput ? repsInput.value : 0;
 
         if (weight || reps) {
-            workoutNotes += `- ${ex} (مجموعة ${set}): ${weight || 0} كجم × ${reps || 0} عدات\n`;
+            workoutText += `- ${ex} (مجموعة ${set}): ${weight || 0} كجم × ${reps || 0} عدات\n`;
             hasData = true;
-            // تفريغ الخانات بعد الحفظ عشان العميل ميبعتهاش مرتين
             input.value = "";
             if(repsInput) repsInput.value = "";
         }
@@ -219,12 +254,14 @@ function saveWorkoutLog() {
 
     if (!hasData) return showToast("⚠️ لم تقم بإدخال أي أوزان أو عدات للحفظ!");
 
-    document.getElementById('dailyNotes').value += "\n" + workoutNotes;
-    showToast("✅ تم تسجيل أوزانك! اذهب لتاب الخطة واضغط إرسال التقرير.");
-    switchTab('dashboard', document.querySelectorAll('.nav-item')[0]);
+    appData.dailyWorkouts = (appData.dailyWorkouts || "") + workoutText;
+    localStorage.setItem('jm_app_data', JSON.stringify(appData));
+
+    showToast("✅ تم حفظ أوزانك بنجاح! اذهب لتاب الخطة واضغط إرسال التقرير.");
+    activateTabByIndex(0); // العودة لتاب الخطة
 }
 
-// --- باقي الأكواد الأساسية (الماكروز، الأكل، AI) ---
+// --- الأكل والماكروز ---
 function renderProgress() {
     if (!appData.target) return;
     let curr = { cal: 0, p: 0, c: 0, f: 0 };
@@ -299,10 +336,14 @@ function renderMealsUI() {
 
 function updateWater(amt) { waterIntake += amt; if (waterIntake < 0) waterIntake = 0; document.getElementById('waterCount').innerText = `${waterIntake} 💧`; }
 
+// --- إرسال التقرير النهائي والتمارين ---
 async function saveDailyLog() {
     document.getElementById('submitBtn').innerText = "جاري الإرسال...";
+    
     let notes = document.getElementById('dailyNotes').value;
     if (appData.meals.length > 0) { notes += "\n الأكل المسجل: " + appData.meals.map(m => `${m.name}(${m.g}g)`).join(", "); }
+    
+    let workoutsData = appData.dailyWorkouts || "";
     
     let photoUrl = ""; const photoInput = document.getElementById('progressPhoto');
     if (photoInput && photoInput.files[0]) {
@@ -310,14 +351,40 @@ async function saveDailyLog() {
         try { const imgRes = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_KEY}`, { method: 'POST', body: formData }); photoUrl = (await imgRes.json()).data.url; } catch(e) {}
     }
     
-    fetch(`${SCRIPT_URL}?action=saveLog&clientId=${currentClientId}&water=${waterIntake}&notes=${encodeURIComponent(notes)}&photoUrl=${encodeURIComponent(photoUrl)}`)
+    fetch(`${SCRIPT_URL}?action=saveLog&clientId=${currentClientId}&water=${waterIntake}&notes=${encodeURIComponent(notes)}&photoUrl=${encodeURIComponent(photoUrl)}&workouts=${encodeURIComponent(workoutsData)}`)
         .then(res => res.json()).then(data => {
             if (data.status === 'success') { 
                 showToast("تم إرسال التقرير والتمارين بنجاح 🚀"); 
                 document.getElementById('submitBtn').innerText = "إرسال التقرير للكوتش 🚀"; 
-                document.getElementById('dailyNotes').value = ""; // تفريغ بعد الإرسال
+                document.getElementById('dailyNotes').value = ""; 
+                appData.dailyWorkouts = ""; 
+                localStorage.setItem('jm_app_data', JSON.stringify(appData));
             }
         });
+}
+
+function exportDB() { navigator.clipboard.writeText(btoa(unescape(encodeURIComponent(JSON.stringify(foodDB))))); showToast("تم نسخ قاعدة الأكلات!"); }
+function importDB() { const code = prompt("أدخل كود النسخ الاحتياطي:"); if(code) { try { foodDB = JSON.parse(decodeURIComponent(escape(atob(code.trim())))); localStorage.setItem('jm_food_db', JSON.stringify(foodDB)); showToast("تم الاستعادة بنجاح!"); } catch(e) { showToast("كود غير صحيح!"); } } }
+
+function toggleScanner() {
+    const container = document.getElementById('scannerContainer');
+    if(isScannerOpen) { if(codeReader) codeReader.reset(); container.style.display = 'none'; isScannerOpen = false; } 
+    else {
+        container.style.display = 'block'; isScannerOpen = true; if(!codeReader) codeReader = new ZXing.BrowserMultiFormatReader();
+        codeReader.decodeFromVideoDevice(null, 'scannerVideo', (res, err) => {
+            if(res) { codeReader.reset(); container.style.display = 'none'; isScannerOpen = false; fetchBarcode(res.text); }
+        });
+    }
+}
+
+function fetchBarcode(code) {
+    showToast("جاري البحث...");
+    fetch(`https://world.openfoodfacts.org/api/v2/product/${code}.json`).then(res => res.json()).then(data => {
+        if(data.status === 1 && data.product) {
+            const p = data.product; const nut = p.nutriments;
+            showToast(`تم قراءة: ${p.product_name}. أضفه يدوياً ببياناته.`);
+        } else { showToast("منتج غير معروف."); }
+    });
 }
 
 async function analyzeFoodAI(input) {
