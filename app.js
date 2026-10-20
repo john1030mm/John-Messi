@@ -1,4 +1,4 @@
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyqY4lVP1T8OcJmZzwGWC6yjIGsx1Tm2bDLXVSZVn7c-ZbJajc1FicI-N25iuHdzseDrQ/exec"; 
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw_NYegv4cshm2nnAdiRXg6Zw0IwwdY7P7XSpMAIlgXhENc3wu_6xlY2l81OY6h9-nZtA/exec"; 
 const GEMINI_KEY = "AQ.Ab8RN6Ko0MIWGxECtes_XOAfxBpIBbBEoixANLl-aQZsZhiVaA"; // حط مفتاح جوجل هنا
 const IMGBB_KEY = "3b5826821ec6486f42b5f719c97795ff"; 
 
