@@ -97,29 +97,69 @@ button {
 }
 button:active { transform: scale(0.98); }
 
-/* Bottom Navigation Bar */
+/* Bottom Navigation Bar (Liquid Glass / Floating iPhone Style) */
 .bottom-nav {
-  position: fixed; bottom: 0; left: 0; right: 0;
-  background: var(--nav-bg); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
-  display: flex; justify-content: space-around; padding: 10px 0;
-  border-top: 1px solid var(--glass-border); z-index: 1000;
-  box-shadow: 0 -5px 20px rgba(0,0,0,0.1);
-  padding-bottom: env(safe-area-inset-bottom); /* دعم الايفون نوتش */
+  position: fixed;
+  bottom: 25px; /* مرفوع عن الأرضية شوية */
+  left: 50%;
+  transform: translateX(-50%);
+  width: 90%;
+  max-width: 450px;
+  
+  /* سر الـ Liquid Glass */
+  background: rgba(30, 30, 36, 0.4) !important; /* شفافية قوية */
+  backdrop-filter: blur(25px) saturate(200%);
+  -webkit-backdrop-filter: blur(25px) saturate(200%); /* للايفون */
+  
+  /* الحواف والظل */
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 35px; /* دوران كامل زي الايفون */
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5), inset 0 1px 1px rgba(255,255,255,0.1);
+  
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 20px;
+  z-index: 1000;
+  transition: all 0.3s ease;
+}
+
+/* تعديل الوضع النهاري للزجاج */
+[data-theme="light"] .bottom-nav {
+  background: rgba(255, 255, 255, 0.5) !important;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1), inset 0 1px 1px rgba(255,255,255,0.6);
 }
 
 .nav-item {
   display: flex; flex-direction: column; align-items: center; justify-content: center;
-  color: var(--nav-icon); text-decoration: none; font-size: 12px; font-weight: 600;
-  width: 30%; cursor: pointer; transition: color 0.3s;
+  color: var(--nav-icon); text-decoration: none; font-size: 13px; font-weight: 700;
+  width: 30%; cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  opacity: 0.6;
 }
-.nav-item.active { color: var(--nav-active); }
-.nav-item svg { width: 24px; height: 24px; margin-bottom: 4px; fill: currentColor; }
 
-/* التابات (إخفاء وإظهار) */
-.tab-content { display: none; animation: fadeIn 0.3s ease; }
-.tab-content.active { display: block; }
-@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+/* تأثير التاب النشط */
+.nav-item.active { 
+  color: var(--nav-active); 
+  opacity: 1;
+  transform: translateY(-3px); /* بيترفع لفوق سنة لما تختاره */
+}
+.nav-item svg { width: 26px; height: 26px; margin-bottom: 5px; fill: currentColor; transition: 0.3s; }
+.nav-item.active svg { filter: drop-shadow(0 4px 6px rgba(0, 188, 212, 0.5)); }
 
+/* أنيميشن التابات مع السحب */
+.tab-content { display: none; }
+.tab-content.active { 
+  display: block; 
+  animation: swipeAnim 0.4s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+@keyframes swipeAnim {
+  from { opacity: 0; transform: scale(0.98) translateX(20px); }
+  to { opacity: 1; transform: scale(1) translateX(0); }
+}
+
+/* مسافة تحت عشان البار العائم ميغطيش على الكلام */
+body { padding-bottom: 110px; }
 /* التمارين (Workouts) */
 .exercise-card { background: rgba(0,0,0,0.02); border-radius: 15px; padding: 15px; margin-bottom: 15px; border: 1px solid var(--glass-border); }
 .exercise-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
