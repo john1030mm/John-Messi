@@ -1,291 +1,205 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>تطبيق تدريب احترافي</title>
-    <style>
-        :root {
-            /* نظام الألوان الفاتح (Light Mode) */
-            --bg-body: #f4f7f6;
-            --bg-card: rgba(255, 255, 255, 0.7);
-            --text-primary: #1a1a24;
-            --text-secondary: #555;
-            --primary: #4ade80;
-            --primary-dark: #22c55e;
-            --glass-border: rgba(255, 255, 255, 0.5);
-            --nav-bg: rgba(255, 255, 255, 0.85);
-            --nav-icon: #888;
-            --danger: #ef4444;
-        }
-
-        [data-theme="dark"] {
-            /* نظام الألوان الداكن (Dark Mode) - الافتراضي */
-            --bg-body: #121212;
-            --bg-card: rgba(30, 30, 40, 0.6);
-            --text-primary: #f0f0f0;
-            --text-secondary: #aaa;
-            --primary: #4ade80;
-            --primary-dark: #22c55e;
-            --glass-border: rgba(255, 255, 255, 0.1);
-            --nav-bg: rgba(20, 20, 25, 0.85);
-            --nav-icon: #888;
-        }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
-        
-        body { 
-            background: var(--bg-body); 
-            color: var(--text-primary); 
-            padding-bottom: 90px; 
-            transition: background 0.3s ease; 
-        }
-
-        /* Glassmorphism Classes */
-        .glass {
-            background: var(--bg-card);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid var(--glass-border);
-            border-radius: 20px;
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1);
-        }
-
-        .container { padding: 20px; max-width: 600px; margin: 0 auto; }
-        
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .theme-btn { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-primary); }
-
-        .card { padding: 20px; margin-bottom: 20px; }
-        
-        h2 { font-size: 1.5rem; margin-bottom: 15px; color: var(--primary); }
-        h3 { font-size: 1.2rem; margin-bottom: 10px; }
-
-        /* مدخلات النصوص (Inputs) */
-        input, select, textarea {
-            width: 100%; padding: 12px 15px; margin-bottom: 15px;
-            border-radius: 12px; border: 1px solid var(--glass-border);
-            background: rgba(0,0,0,0.05); color: var(--text-primary);
-            font-size: 1rem; transition: border-color 0.3s ease;
-        }
-        [data-theme="dark"] input, [data-theme="dark"] select, [data-theme="dark"] textarea { background: rgba(255,255,255,0.05); }
-        input:focus, textarea:focus { outline: none; border-color: var(--primary); }
-
-        /* الأزرار (Buttons) */
-        button {
-            width: 100%; padding: 14px; border-radius: 12px;
-            border: none; background: var(--primary); color: #111;
-            font-size: 1.1rem; font-weight: bold; cursor: pointer;
-            box-shadow: 0 4px 15px rgba(74, 222, 128, 0.3);
-            transition: transform 0.2s, background 0.3s;
-        }
-        button:active { transform: scale(0.98); }
-        .danger-btn { background: var(--danger); color: white; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3); }
-
-        /* شريط الماكروز (Progress Bars) */
-        .macro-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 0.9rem; }
-        .progress-bg { height: 10px; background: rgba(255,255,255,0.1); border-radius: 5px; overflow: hidden; margin-bottom: 15px; }
-        [data-theme="light"] .progress-bg { background: rgba(0,0,0,0.1); }
-        .progress-fill { height: 100%; background: var(--primary); width: 0%; transition: width 0.5s ease; }
-        .progress-fill.overlimit { background: var(--danger); }
-
-        /* القوائم والوجبات */
-        .meal-item {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 12px; border-bottom: 1px solid var(--glass-border);
-        }
-        .meal-item:last-child { border-bottom: none; }
-        .meal-macros { font-size: 0.8rem; color: var(--text-secondary); margin-top: 4px; }
-        .delete-btn { width: auto; padding: 5px 10px; background: none; color: var(--danger); box-shadow: none; font-size: 1.2rem; }
-
-        /* البحث والاقتراحات */
-        #suggestions {
-            background: var(--bg-card); backdrop-filter: blur(15px);
-            border: 1px solid var(--glass-border); border-radius: 12px;
-            max-height: 200px; overflow-y: auto; display: none; margin-bottom: 15px;
-        }
-        .suggestion-item { padding: 12px 15px; border-bottom: 1px solid var(--glass-border); cursor: pointer; }
-        .suggestion-item:active { background: rgba(74, 222, 128, 0.2); }
-
-        /* البار السفلي (Bottom Nav) */
-        .bottom-nav {
-            position: fixed; bottom: 0; left: 0; right: 0;
-            background: var(--nav-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-            border-top: 1px solid var(--glass-border);
-            display: flex; justify-content: space-around; padding: 15px 10px; padding-bottom: calc(15px + env(safe-area-inset-bottom));
-            z-index: 1000; border-radius: 25px 25px 0 0;
-        }
-        .nav-item {
-            display: flex; flex-direction: column; align-items: center;
-            color: var(--nav-icon); font-size: 0.75rem; text-decoration: none; transition: 0.3s; cursor: pointer;
-        }
-        .nav-item.active { color: var(--primary); transform: translateY(-3px); }
-        .nav-icon { font-size: 1.5rem; margin-bottom: 4px; }
-
-        /* التابات وإدارتها */
-        .tab-content { display: none; opacity: 0; }
-        .tab-content.active { display: block; opacity: 1; }
-
-        /* الإشعارات (Toast) */
-        #toast {
-            visibility: hidden; min-width: 250px; background-color: var(--primary); color: #111;
-            text-align: center; border-radius: 12px; padding: 16px; position: fixed;
-            z-index: 2000; left: 50%; bottom: 100px; transform: translateX(-50%);
-            font-weight: bold; font-size: 0.9rem; box-shadow: 0 5px 20px rgba(0,0,0,0.3);
-        }
-        #toast.show { visibility: visible; animation: fadein 0.5s, fadeout 0.5s 2.5s; }
-        @keyframes fadein { from {bottom: 80px; opacity: 0;} to {bottom: 100px; opacity: 1;} }
-        @keyframes fadeout { from {bottom: 100px; opacity: 1;} to {bottom: 80px; opacity: 0;} }
-        @keyframes swipeAnim { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
-
-        /* المودال (نافذة الفيديو / الباركود) */
-        .modal {
-            display: none; position: fixed; z-index: 3000; left: 0; top: 0; width: 100%; height: 100%;
-            background-color: rgba(0,0,0,0.8); backdrop-filter: blur(5px); justify-content: center; align-items: center;
-        }
-        .modal-content { background: var(--bg-body); padding: 20px; border-radius: 20px; width: 90%; max-width: 500px; position: relative; }
-        .close-modal { position: absolute; top: 10px; right: 15px; font-size: 1.5rem; color: var(--text-primary); cursor: pointer; }
-    </style>
-    <!-- مكتبة الباركود (اختياري) -->
-    <script src="https://unpkg.com/@zxing/library@latest"></script>
-</head>
-<body data-theme="dark">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>JM Tracker Pro</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://unpkg.com/@zxing/library@latest"></script>
+@@ -12,115 +12,117 @@
+<header>
+  <div class="brand">JM Tracker</div>
+  <div class="controls">
+    <button onclick="exportDB()" title="نسخ احتياطي">📥</button>
+    <button onclick="importDB()" title="استعادة">📤</button>
+    <button onclick="toggleLang()" id="langBtn">EN</button>
+    <button onclick="toggleTheme()" id="themeBtn">☀️</button>
+  </div>
+</header>
 
 <div class="container">
-    <div class="header">
-        <h1 style="font-size: 1.5rem; font-weight: 800;">Fit<span style="color: var(--primary);">Track</span></h1>
-        <button class="theme-btn" id="themeBtn" onclick="toggleTheme()">☀️</button>
+
+  <!-- شاشة تسجيل الدخول -->
+  <div id="loginSection" class="card">
+    <h2 id="t_login">تسجيل الدخول</h2>
+  <!-- شاشة الدخول -->
+  <div id="loginSection" class="glass-card">
+    <h2 style="text-align: center; border: none;">تسجيل الدخول</h2>
+    <input type="text" id="clientIdInput" placeholder="كود العميل">
+    <input type="password" id="clientPassInput" placeholder="كلمة المرور">
+    <button onclick="login()" id="loginBtn">دخول</button>
+  </div>
+
+  <!-- لوحة التحكم (تظهر بعد الدخول) -->
+  <div id="dashboard" style="display: none;">
+
+    <!-- 1. متابعة الماكروز + خطة الكوتش المدمجة -->
+    <div class="card">
+      <h2 id="t_progTitle">الخطة ومتابعة اليوم</h2>
+      
+      <!-- خطة الكوتش -->
+      <div style="background: rgba(0, 102, 238, 0.08); border-right: 4px solid var(--primary); padding: 12px; margin-bottom: 20px; border-radius: 8px;">
+        <div style="font-weight: bold; color: var(--primary); margin-bottom: 5px; font-size: 15px;" id="t_planTitle">📋 مطلوب أكله اليوم:</div>
+        <div id="coachPlanText" style="white-space: pre-wrap; font-size: 14px; line-height: 1.6; font-weight: 500;"></div>
+      </div>
+  <!-- التطبيق الفعلي -->
+  <div id="mainApp" style="display: none;">
+
+      <!-- البار -->
+      <div class="progress-container"><div class="progress-label"><span id="t_cal">السعرات</span><span id="calText">0 / 0</span></div><div class="progress-bar"><div id="calBar" class="progress-fill"></div></div></div>
+      <div class="progress-container"><div class="progress-label"><span id="t_pro">البروتين</span><span id="protText">0 / 0g</span></div><div class="progress-bar"><div id="protBar" class="progress-fill"></div></div></div>
+      <div class="progress-container"><div class="progress-label"><span id="t_carb">الكارب</span><span id="carbText">0 / 0g</span></div><div class="progress-bar"><div id="carbBar" class="progress-fill"></div></div></div>
+      <div class="progress-container"><div class="progress-label"><span id="t_fat">الدهون</span><span id="fatText">0 / 0g</span></div><div class="progress-bar"><div id="fatBar" class="progress-fill"></div></div></div>
+    </div>
+    <!-- التاب الأول: لوحة التحكم (الماكروز والخطة) -->
+    <div id="tab-dashboard" class="tab-content active">
+      <div class="glass-card">
+        <h2>الخطة ومتابعة اليوم</h2>
+        <div style="background: rgba(0, 188, 212, 0.1); border-right: 4px solid var(--primary); padding: 15px; margin-bottom: 20px; border-radius: 12px;">
+          <div style="font-weight: bold; color: var(--primary); margin-bottom: 8px;">📋 مطلوب اليوم:</div>
+          <div id="coachPlanText" style="white-space: pre-wrap; font-size: 14px; line-height: 1.6;"></div>
+        </div>
+
+    <!-- 2. إضافة وجبة -->
+    <div class="card">
+      <h2 id="t_addTitle">إضافة وجبة إضافية</h2>
+      
+      <!-- مربع البحث وزرار الباركود -->
+      <div style="display:flex; gap:10px; position:relative;">
+        <input type="text" id="searchInput" oninput="handleSearch()" onfocus="handleSearch()" placeholder="ابحث عن أكلة..." style="flex:1;">
+        <div id="suggestions" class="suggestions"></div>
+        <button onclick="toggleScanner()" style="width:50px; padding:0; background:var(--success); font-size:1.2rem;" title="مسح الباركود">📷</button>
+        <div class="progress-container"><div class="progress-label"><span>السعرات</span><span id="calText">0 / 0</span></div><div class="progress-bar"><div id="calBar" class="progress-fill"></div></div></div>
+        <div class="progress-container"><div class="progress-label"><span>البروتين</span><span id="protText">0 / 0g</span></div><div class="progress-bar"><div id="protBar" class="progress-fill"></div></div></div>
+        <div class="progress-container"><div class="progress-label"><span>الكارب</span><span id="carbText">0 / 0g</span></div><div class="progress-bar"><div id="carbBar" class="progress-fill"></div></div></div>
+        <div class="progress-container"><div class="progress-label"><span>الدهون</span><span id="fatText">0 / 0g</span></div><div class="progress-bar"><div id="fatBar" class="progress-fill"></div></div></div>
+      </div>
+
+      <!-- كاميرا الباركود (مخفية) -->
+      <div id="scannerContainer">
+        <video id="scannerVideo"></video>
+        <div class="scanner-laser"></div>
+        <button onclick="toggleScanner()" style="background:var(--danger); margin-top:5px;">إغلاق الكاميرا ✖</button>
+      <div class="glass-card">
+        <h2>التقرير اليومي</h2>
+        <div class="water-tracker">
+          <button onclick="updateWater(-1)">- كوب</button><span id="waterCount">0 💧</span><button onclick="updateWater(1)">+ كوب</button>
+        </div>
+        <textarea id="dailyNotes" placeholder="أكلت إيه بره الخطة؟ وإيه أخبار التزامك؟"></textarea>
+        <button onclick="saveDailyLog()" id="submitBtn" style="background: var(--success); color: #000;">إرسال التقرير للكوتش 🚀</button>
+      </div>
     </div>
 
-    <!-- شاشة تسجيل الدخول -->
-    <div id="loginSection" class="glass card">
-        <h2>تسجيل الدخول</h2>
-        <input type="text" id="clientIdInput" placeholder="كود العميل (مثال: 1001)">
-        <input type="password" id="clientPassInput" placeholder="كلمة المرور">
-        <button id="loginBtn" onclick="login()">دخول</button>
-    </div>
-
-    <!-- التطبيق الرئيسي (مخفي حتى الدخول) -->
-    <div id="mainApp" style="display: none;">
+      <!-- الكمية وزرار الإضافة العادي -->
+      <input type="number" id="gramsInput" placeholder="الكمية بالجرام (مثال: 150)">
+      <button onclick="addMeal()" id="t_addBtn">إضافة الوجبة +</button>
+    <!-- التاب الثاني: التغذية (البحث والوجبات) -->
+    <div id="tab-nutrition" class="tab-content">
+      <div class="glass-card">
+        <h2>إضافة وجبة</h2>
+        <div style="display:flex; gap:10px; position:relative;">
+          <input type="text" id="searchInput" onkeyup="handleSearch()" onfocus="handleSearch()" placeholder="ابحث عن أكلة..." style="flex:1;">
+          <div id="suggestions" class="suggestions" style="z-index: 9999;"></div>
+          <button onclick="toggleScanner()" style="width:55px; padding:0; background:var(--primary); font-size:1.2rem;">📷</button>
+        </div>
         
-        <!-- التاب الأول: الخطة والمتابعة -->
-        <div id="tab-dashboard" class="tab-content active">
-            <div class="glass card">
-                <h3>توجيهات الكوتش 🎯</h3>
-                <p id="coachPlanText" style="color: var(--primary); font-weight: bold; line-height: 1.5;"></p>
-            </div>
+        <div id="scannerContainer"><video id="scannerVideo"></video><button onclick="toggleScanner()" style="background:var(--danger); margin-top:5px;">إغلاق ✖</button></div>
 
-            <!-- الماكروز المتبقية -->
-            <div class="glass card">
-                <h3>استهلاك اليوم 📊</h3>
-                <div class="macro-row"><span>السعرات</span><span id="calText">0 / 0</span></div>
-                <div class="progress-bg"><div class="progress-fill" id="calBar"></div></div>
-                
-                <div class="macro-row"><span>البروتين</span><span id="protText">0 / 0g</span></div>
-                <div class="progress-bg"><div class="progress-fill" id="protBar"></div></div>
-                
-                <div class="macro-row"><span>الكارب</span><span id="carbText">0 / 0g</span></div>
-                <div class="progress-bg"><div class="progress-fill" id="carbBar"></div></div>
-                
-                <div class="macro-row"><span>الدهون</span><span id="fatText">0 / 0g</span></div>
-                <div class="progress-bg"><div class="progress-fill" id="fatBar"></div></div>
-            </div>
-
-            <div class="glass card">
-                <h3>شرب المايه 💧</h3>
-                <div style="display: flex; justify-content: space-around; align-items: center; font-size: 1.5rem;">
-                    <button onclick="updateWater(-1)" style="width: 50px; background: rgba(255,255,255,0.1); color: var(--text-primary);">-</button>
-                    <span id="waterCount" style="font-weight: bold;">0 💧</span>
-                    <button onclick="updateWater(1)" style="width: 50px;">+</button>
-                </div>
-            </div>
-
-            <div class="card" id="submitSection">
-                <h3>إرسال التقرير اليومي للكوتش 🚀</h3>
-                <textarea id="dailyNotes" rows="3" placeholder="اكتب ملاحظاتك هنا (مثال: نمت كويس، حاسس بإرهاق...)"></textarea>
-                
-                <!-- زرار رفع الصورة الجديد بشياكة -->
-                <div style="margin: 15px 0;">
-                    <label for="progressPhoto" style="display: block; background: rgba(0,0,0,0.3); padding: 12px; border-radius: 12px; border: 1px dashed var(--primary); text-align: center; cursor: pointer; color: var(--text-secondary); transition: all 0.3s ease;">
-                        <span id="photoStatus">📸 أضف صورة تطور (اختياري)</span>
-                        <input type="file" id="progressPhoto" accept="image/*" style="display: none;" onchange="updatePhotoStatus()">
-                    </label>
-                </div>
-
-                <button id="submitBtn" onclick="saveDailyLog()">إرسال التقرير للكوتش 🚀</button>
-            </div>
-        </div>
-
-        <!-- التاب الثاني: التغذية والأكل -->
-        <div id="tab-nutrition" class="tab-content">
-            <div class="glass card">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                    <h3>سجل أكلك 🍽️</h3>
-                    <div style="display: flex; gap: 5px;">
-                        <button onclick="document.getElementById('aiImgInput').click()" style="padding: 8px; width: auto; font-size: 0.9rem;">✨ AI</button>
-                        <input type="file" id="aiImgInput" accept="image/*" style="display: none;" onchange="analyzeFoodAI(this)">
-                        <button onclick="toggleScanner()" style="padding: 8px; width: auto; font-size: 0.9rem; background: var(--nav-icon); color: white;">📷</button>
-                    </div>
-                </div>
-                
-                <input type="text" id="searchInput" placeholder="ابحث عن أكلة (دجاج، أرز، شوفان...)" onkeyup="handleSearch()">
-                <div id="suggestions"></div>
-                
-                <div style="display: flex; gap: 10px;">
-                    <input type="number" id="gramsInput" placeholder="الكمية (بالجرام)" style="flex: 2;">
-                    <button onclick="addMeal()" style="flex: 1;">إضافة</button>
-                </div>
-            </div>
-
-            <!-- الكاميرا (مخفية) -->
-            <div id="scannerContainer" style="display:none; text-align:center; margin-bottom:15px;">
-                <video id="scannerVideo" style="width:100%; border-radius:12px; border:2px solid var(--primary);"></video>
-                <p style="font-size:0.8rem; color:var(--text-secondary);">وجه الكاميرا نحو باركود المنتج</p>
-            </div>
-
-            <div class="glass card">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                    <h3>وجبات اليوم</h3>
-                    <button onclick="resetDay()" class="danger-btn" style="width: auto; padding: 5px 10px; font-size: 0.8rem;">مسح الكل</button>
-                </div>
-                <div id="mealsList"></div>
-            </div>
-        </div>
-
-        <!-- التاب الثالث: التمارين -->
-        <div id="tab-workouts" class="tab-content">
-            <div id="workoutsList">
-                <!-- التمارين هتتولد هنا من السكريبت -->
-            </div>
-            <button onclick="saveWorkoutLog()" style="margin-top: 15px; margin-bottom: 30px;">حفظ الأوزان 💾</button>
-        </div>
-
+      <!-- زرار الذكاء الاصطناعي -->
+      <div style="margin-top: 15px; border-top: 1px dashed var(--border); padding-top: 15px;">
+        <input type="file" id="aiImageInput" accept="image/*" capture="camera" style="display:none;" onchange="analyzeFoodAI(this)">
+        <button onclick="document.getElementById('aiImageInput').click()" style="background: linear-gradient(90deg, #8e2de2, #4a00e0); color: white; border-radius: 12px; font-size: 1.1rem;">
+          ✨ صوّر طبقك والـ AI هيحسبهالك
+        </button>
+      </div>
     </div>
+        <input type="number" id="gramsInput" placeholder="الكمية بالجرام (مثال: 150)">
+        <button onclick="addMeal()">إضافة الوجبة +</button>
+
+    <!-- 3. إضافة أكلة مخصصة (تظهر فقط عند البحث عن أكلة غير موجودة) -->
+    <div class="card" id="foodFormCard" style="display:none; border: 2px dashed var(--primary);">
+      <h2 id="t_customTitle">إضافة أكلة جديدة لقاعدتك (لكل 100 جم)</h2>
+      <input type="hidden" id="editFoodId">
+      <input type="text" id="foodName" placeholder="اسم الأكلة">
+      <div class="grid-2">
+        <input type="number" id="foodCal" placeholder="السعرات">
+        <input type="number" id="foodPro" placeholder="بروتين">
+        <input type="number" id="foodCarb" placeholder="كارب">
+        <input type="number" id="foodFat" placeholder="دهون">
+        <div style="margin-top: 15px; text-align: center;">
+          <input type="file" id="aiImageInput" accept="image/*" capture="camera" style="display:none;" onchange="analyzeFoodAI(this)">
+          <button onclick="document.getElementById('aiImageInput').click()" style="background: linear-gradient(90deg, #8e2de2, #4a00e0);">✨ تصوير الطبق (AI)</button>
+        </div>
+      </div>
+      <div style="display:flex; gap:10px;">
+        <button onclick="saveFoodDB()" id="t_saveFoodBtn">حفظ بقاعدة البيانات</button>
+        <button onclick="cancelEdit()" style="background:#888;">إلغاء</button>
+      </div>
+    </div>
+
+    <!-- 4. سجل اليوم -->
+    <div class="card">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <h2 id="t_historyTitle" style="margin:0; border:none;">سجل اليوم</h2>
+        <button onclick="resetDay()" id="t_resetBtn" style="width:auto; padding:5px 10px; margin:0; background:var(--danger);">إعادة ضبط 🔄</button>
+      <div class="glass-card">
+        <h2 style="display: flex; justify-content: space-between;">سجل اليوم <button onclick="resetDay()" style="width: auto; padding: 5px 10px; background: var(--danger); margin: 0; font-size: 12px;">إعادة ضبط 🔄</button></h2>
+        <div id="mealsList"></div>
+      </div>
+      <div id="mealsList"></div>
+    </div>
+
+    <!-- 5. التقرير النهائي والماء -->
+    <div class="card">
+      <h2 id="t_reportTitle">الماء والتقرير</h2>
+      <div class="water-tracker">
+        <button onclick="updateWater(-1)">- كوب</button><span id="waterCount">0 💧</span><button onclick="updateWater(1)">+ كوب</button>
+    <!-- التاب الثالث: التمارين (الجديد) -->
+    <div id="tab-workouts" class="tab-content">
+      <div class="glass-card">
+        <h2>💪 تمرين اليوم</h2>
+        <div id="workoutsList">
+          <!-- سيتم تحميل التمارين هنا ديناميكياً -->
+          <p style="text-align: center; color: var(--text-secondary);">جاري تحميل خطة التمرين...</p>
+        </div>
+        <button onclick="saveWorkoutLog()" style="background: var(--success); color: #000; margin-top: 20px;">حفظ أوزان اليوم 💾</button>
+      </div>
+      <input type="file" id="progressPhoto" accept="image/*" style="margin-top:15px;">
+      <textarea id="dailyNotes" placeholder="أكلت إيه بره الخطة؟ وإيه أخبار التزامك؟"></textarea>
+      <button onclick="saveDailyLog()" id="submitBtn" style="background:var(--success);">إرسال التقرير للكوتش 🚀</button>
+    </div>
+
+  </div>
+  </div> <!-- نهاية mainApp -->
+
 </div>
 
-<!-- نافذة عرض الفيديو -->
-<div id="videoModal" class="modal">
-    <div class="modal-content">
-        <span class="close-modal" onclick="closeVideo()">&times;</span>
-        <h3 style="margin-bottom: 15px;">شرح التمرين</h3>
-        <div id="videoContainer"></div>
-    </div>
-</div>
-
-<!-- البار السفلي -->
-<div id="bottomNav" class="bottom-nav" style="display: none;">
-    <div class="nav-item active" onclick="switchTab('dashboard', this)">
-        <span class="nav-icon">📊</span><span>الخطة</span>
-    </div>
-    <div class="nav-item" onclick="switchTab('nutrition', this)">
-        <span class="nav-icon">🍎</span><span>الأكل</span>
-    </div>
-    <div class="nav-item" onclick="switchTab('workouts', this)">
-        <span class="nav-icon">💪</span><span>التمارين</span>
-    </div>
-</div>
+<!-- Bottom Navigation Bar -->
+<nav class="bottom-nav" id="bottomNav" style="display: none;">
+  <div class="nav-item active" onclick="switchTab('dashboard', this)">
+    <svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
+    الخطة
+  </div>
+  <div class="nav-item" onclick="switchTab('nutrition', this)">
+    <svg viewBox="0 0 24 24"><path d="M11 9H9V2H7v7H5V2H3v7c0 2.12 1.66 3.84 3.75 3.97V22h2.5v-9.03C11.34 12.84 13 11.12 13 9V2h-2v7zm5-3v8h2.5v8H21V2c-2.76 0-5 2.24-5 4z"/></svg>
+    التغذية
+  </div>
+  <div class="nav-item" onclick="switchTab('workouts', this)">
+    <svg viewBox="0 0 24 24"><path d="M20.57 14.86L22 13.43 20.57 12 17 15.57 8.43 7 12 3.43 10.57 2 9.14 3.43 7.71 2 5.57 4.14 4.14 2.71 2.71 4.14l1.43 1.43L2 7.71l1.43 1.43L2 10.57 3.43 12 7 8.43 15.57 17 12 20.57 13.43 22l1.43-1.43L16.29 22l2.14-2.14 1.43 1.43 1.43-1.43-1.43-1.43L22 16.29z"/></svg>
+    التمارين
+  </div>
+</nav>
 
 <div id="toast"></div>
+
+<!-- نافذة عرض الفيديو (Modal) -->
+<div id="videoModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.9); z-index: 3000; align-items: center; justify-content: center; flex-direction: column;">
+  <div style="width: 90%; max-width: 500px;">
+    <div style="text-align: right; margin-bottom: 10px;"><button onclick="closeVideo()" style="width: auto; background: var(--danger); padding: 5px 15px;">إغلاق ✖</button></div>
+    <div id="videoContainer" style="width: 100%; border-radius: 12px; overflow: hidden;"></div>
+  </div>
+</div>
 
 <script src="app.js"></script>
 </body>
