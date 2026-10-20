@@ -12,26 +12,71 @@ function showToast(msg) {
     setTimeout(() => t.className = t.className.replace("show", ""), 3000); 
 }
 
-// --- التنقل بين التابات ---
+// --- التنقل بين التابات والسحب (Swipe) ---
+const tabsList = ['dashboard', 'nutrition', 'workouts'];
+let currentTabIndex = 0;
+
 function switchTab(tabName, element) {
-    document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+    currentTabIndex = tabsList.indexOf(tabName);
+    
+    // إخفاء الكل وإلغاء الأنيميشن
+    document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.classList.remove('active');
+        tab.style.animation = 'none'; 
+    });
     document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
-    document.getElementById(`tab-${tabName}`).classList.add('active');
+    
+    // إظهار الجديد مع الأنيميشن
+    const activeTab = document.getElementById(`tab-${tabName}`);
+    activeTab.classList.add('active');
+    void activeTab.offsetWidth; // Trigger Reflow
+    activeTab.style.animation = 'swipeAnim 0.4s cubic-bezier(0.25, 1, 0.5, 1) forwards';
+    
     element.classList.add('active');
 }
 
-function init() {
-    document.body.setAttribute('data-theme', appData.theme);
-    document.documentElement.setAttribute('data-theme', appData.theme);
-    document.getElementById('themeBtn').textContent = appData.theme === 'dark' ? '☀️' : '🌙';
+// ميزة السحب يمين وشمال للموبايل
+let touchstartX = 0;
+let touchstartY = 0;
+let touchendX = 0;
+let touchendY = 0;
+
+document.addEventListener('touchstart', function(e) {
+    touchstartX = e.changedTouches[0].screenX;
+    touchstartY = e.changedTouches[0].screenY;
+}, {passive: true});
+
+document.addEventListener('touchend', function(e) {
+    touchendX = e.changedTouches[0].screenX;
+    touchendY = e.changedTouches[0].screenY;
+    handleSwipe();
+}, {passive: true});
+
+function handleSwipe() {
+    const xDiff = Math.abs(touchendX - touchstartX);
+    const yDiff = Math.abs(touchendY - touchstartY);
+    
+    // التأكد إن السحب بالعرض مش بالطول (عشان ميتعارضش مع الاسكرول لتحت)
+    if (xDiff > yDiff && xDiff > 60) {
+        if (touchendX < touchstartX) {
+            // سحب للشمال (التالي)
+            if(currentTabIndex < tabsList.length - 1) {
+                currentTabIndex++;
+                activateTabByIndex(currentTabIndex);
+            }
+        } else {
+            // سحب لليمين (السابق)
+            if(currentTabIndex > 0) {
+                currentTabIndex--;
+                activateTabByIndex(currentTabIndex);
+            }
+        }
+    }
 }
 
-function toggleTheme() {
-    appData.theme = appData.theme === 'dark' ? 'light' : 'dark';
-    document.body.setAttribute('data-theme', appData.theme);
-    document.documentElement.setAttribute('data-theme', appData.theme);
-    document.getElementById('themeBtn').textContent = appData.theme === 'dark' ? '☀️' : '🌙';
-    localStorage.setItem('jm_app_data', JSON.stringify(appData));
+function activateTabByIndex(index) {
+    const navItems = document.querySelectorAll('.nav-item');
+    switchTab(tabsList[index], navItems[index]);
 }
 
 // --- تسجيل الدخول وجلب البيانات ---
