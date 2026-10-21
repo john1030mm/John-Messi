@@ -3,17 +3,20 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>JM Tracker Pro</title>
+  <title>John Messi</title>
   <link rel="stylesheet" href="style.css">
   <script src="https://unpkg.com/@zxing/library@latest"></script>
 </head>
 <body data-theme="dark">
 
 <header>
-  <div class="brand">JM Tracker</div>
-  <div class="controls">
-    <button onclick="toggleTheme()" id="themeBtn">☀️</button>
-  </div>
+<div class="header">
+    <h1 style="font-size: 1.5rem; font-weight: 800;">Fit<span style="color: var(--primary);">Track</span></h1>
+    <div>
+        <button class="theme-btn" id="langBtn" onclick="toggleLang()" style="margin-left: 10px; font-size: 1.2rem;">🌐 AR</button>
+        <button class="theme-btn" id="themeBtn" onclick="toggleTheme()">☀️</button>
+    </div>
+</div>
 </header>
 
 <div class="container">
@@ -69,11 +72,22 @@
         <input type="number" id="gramsInput" placeholder="الكمية بالجرام (مثال: 150)">
         <button onclick="addMeal()">إضافة الوجبة +</button>
 
-        <div style="margin-top: 15px; text-align: center;">
-          <input type="file" id="aiImageInput" accept="image/*" capture="camera" style="display:none;" onchange="analyzeFoodAI(this)">
-          <button onclick="document.getElementById('aiImageInput').click()" style="background: linear-gradient(90deg, #8e2de2, #4a00e0);">✨ تصوير الطبق (AI)</button>
-        </div>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+    <h3>سجل أكلك 🍽️</h3>
+    <div style="display: flex; gap: 5px;">
+        <button onclick="document.getElementById('aiImgInput').click()" style="padding: 8px; width: auto; font-size: 0.9rem;">✨ AI</button>
+        <input type="file" id="aiImgInput" accept="image/*" style="display: none;" onchange="analyzeFoodAI(this)">
+        
+        <!-- زرار الكاميرا أهو -->
+        <button onclick="toggleScanner()" style="padding: 8px; width: auto; font-size: 0.9rem; background: var(--nav-icon); color: white;">📷</button>
+    </div>
+</div>
       </div>
+      <!-- الكاميرا (مخفية لحد ما تضغط على الزرار) -->
+<div id="scannerContainer" style="display:none; text-align:center; margin-bottom:15px;">
+    <video id="scannerVideo" style="width:100%; border-radius:12px; border:2px solid var(--primary);"></video>
+    <p style="font-size:0.8rem; color:var(--text-secondary);">وجه الكاميرا نحو باركود المنتج</p>
+</div>
 
       <div class="glass-card">
         <h2 style="display: flex; justify-content: space-between;">سجل اليوم <button onclick="resetDay()" style="width: auto; padding: 5px 10px; background: var(--danger); margin: 0; font-size: 12px;">إعادة ضبط 🔄</button></h2>
