@@ -56,56 +56,45 @@
       </div>
     </div>
 
-    <!-- التاب الثاني: التغذية (البحث والوجبات) -->
-    <div id="tab-nutrition" class="tab-content">
-      <div class="glass-card">
-        <h2>إضافة وجبة</h2>
-        <div style="display:flex; gap:10px; position:relative;">
-          <input type="text" id="searchInput" onkeyup="handleSearch()" onfocus="handleSearch()" placeholder="ابحث عن أكلة..." style="flex:1;">
-          <div id="suggestions" class="suggestions" style="z-index: 9999;"></div>
-          <button onclick="toggleScanner()" style="width:55px; padding:0; background:var(--primary); font-size:1.2rem;">📷</button>
+<!-- التاب الثاني: التغذية والأكل -->
+<div id="tab-nutrition" class="tab-content">
+    <div class="glass card" style="position: relative; z-index: 10; margin-bottom: 25px;"> <!-- زودنا الـ margin-bottom هنا -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;"> <!-- زودنا الـ margin-bottom هنا -->
+            <h3 style="margin: 0; font-size: 1.3rem; font-weight: bold; color: var(--primary);">إضافة وجبة</h3>
+            <div style="display: flex; gap: 10px;"> <!-- زودنا المسافة بين الزراير -->
+                <button onclick="document.getElementById('aiImgInput').click()" style="padding: 8px 15px; width: auto; font-size: 1rem; border-radius: 10px; background: rgba(0,0,0,0.3); border: 1px solid var(--primary); display: flex; align-items: center; justify-content: center; color: var(--primary);">✨ AI</button>
+                <input type="file" id="aiImgInput" accept="image/*" style="display: none;" onchange="analyzeFoodAI(this)">
+                <button onclick="toggleScanner()" style="padding: 8px 15px; width: auto; font-size: 1rem; background: rgba(0,0,0,0.3); color: var(--text-primary); border: 1px solid rgba(255,255,255,0.2); border-radius: 10px; display: flex; align-items: center; justify-content: center;">📷</button>
+            </div>
         </div>
         
-        <div id="scannerContainer"><video id="scannerVideo"></video><button onclick="toggleScanner()" style="background:var(--danger); margin-top:5px;">إغلاق ✖</button></div>
+        <!-- الكاميرا (مخفية) -->
+        <div id="scannerContainer" style="display:none; text-align:center; margin-bottom:20px; padding: 15px; background: rgba(0,0,0,0.2); border-radius: 12px; border: 1px dashed var(--primary);">
+            <video id="scannerVideo" style="width:100%; border-radius:8px;"></video>
+            <p style="font-size:0.9rem; color:var(--text-secondary); margin-top: 10px;">وجه الكاميرا نحو باركود المنتج</p>
+        </div>
 
-        <input type="number" id="gramsInput" placeholder="الكمية بالجرام (مثال: 150)">
-        <button onclick="addMeal()">إضافة الوجبة +</button>
-
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-    <!-- تاب التغذية -->
-<div class="glass card" style="position: relative; z-index: 10;">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-        <h3 style="margin: 0;">إضافة وجبة 🍽️</h3>
-        <div style="display: flex; gap: 8px;">
-            <button onclick="document.getElementById('aiImgInput').click()" style="padding: 6px 12px; width: auto; font-size: 0.9rem; border-radius: 10px; box-shadow: none; display: flex; align-items: center; justify-content: center;">✨ AI</button>
-            <input type="file" id="aiImgInput" accept="image/*" style="display: none;" onchange="analyzeFoodAI(this)">
-            <button onclick="toggleScanner()" style="padding: 6px 12px; width: auto; font-size: 1rem; background: rgba(0,0,0,0.3); color: var(--text-primary); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; box-shadow: none; display: flex; align-items: center; justify-content: center;">📷</button>
+        <!-- حقل البحث والقائمة المنبثقة -->
+        <div style="position: relative; margin-bottom: 20px;"> <!-- حطينا margin-bottom عشان يبعد عن اللي تحته -->
+            <input type="text" id="searchInput" placeholder="ابحث عن أكلة (دجاج، أرز، شوفان...)" onkeyup="handleSearch()" style="margin-bottom: 0;"> <!-- شيلنا الـ margin-bottom من الـ input نفسه -->
+            <div id="suggestions"></div>
+        </div>
+        
+        <!-- حقل الجرامات وزرار الإضافة -->
+        <div style="display: flex; gap: 12px; align-items: stretch;"> <!-- خليناهم يتمددوا بنفس الطول -->
+            <input type="number" id="gramsInput" placeholder="الكمية (بالجرام)" style="flex: 2; margin-bottom: 0; font-size: 1.1rem; padding: 14px;">
+            <button onclick="addMeal()" style="flex: 1; margin-bottom: 0; font-size: 1.1rem; padding: 14px; background: var(--primary); color: #111; font-weight: bold;">إضافة +</button>
         </div>
     </div>
-    
-    <!-- الكاميرا (مخفية) -->
-    <div id="scannerContainer" style="display:none; text-align:center; margin-bottom:15px; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 12px;">
-        <video id="scannerVideo" style="width:100%; border-radius:8px; border:2px solid var(--primary);"></video>
-        <p style="font-size:0.8rem; color:var(--text-secondary); margin-top: 5px;">وجه الكاميرا نحو باركود المنتج</p>
-    </div>
 
-    <!-- حقل البحث والقائمة المنبثقة -->
-    <div style="position: relative;">
-        <input type="text" id="searchInput" placeholder="ابحث عن أكلة (بالعربي أو الانجليزي)..." onkeyup="handleSearch()" style="margin-bottom: 10px;">
-        <div id="suggestions"></div>
-    </div>
-    
-    <!-- حقل الجرامات وزرار الإضافة -->
-    <div style="display: flex; gap: 10px; align-items: center;">
-        <input type="number" id="gramsInput" placeholder="الكمية بالجرام (مثال: 150)" style="flex: 2; margin-bottom: 0;">
-        <button onclick="addMeal()" style="flex: 1; margin-bottom: 0;">إضافة</button>
+    <div class="glass card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h3 style="margin: 0; font-size: 1.3rem; font-weight: bold; color: var(--primary);">سجل اليوم</h3>
+            <button onclick="resetDay()" class="danger-btn" style="width: auto; padding: 8px 15px; font-size: 0.9rem; border-radius: 8px;">إعادة ضبط 🔄</button>
+        </div>
+        <div id="mealsList"></div>
     </div>
 </div>
-      <div class="glass-card">
-        <h2 style="display: flex; justify-content: space-between;">سجل اليوم <button onclick="resetDay()" style="width: auto; padding: 5px 10px; background: var(--danger); margin: 0; font-size: 12px;">إعادة ضبط 🔄</button></h2>
-        <div id="mealsList"></div>
-      </div>
-    </div>
 
     <!-- التاب الثالث: التمارين (الجديد) -->
     <div id="tab-workouts" class="tab-content">
