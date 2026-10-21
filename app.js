@@ -127,23 +127,87 @@ function init() {
     document.documentElement.setAttribute('data-theme', appData.theme);
     document.getElementById('themeBtn').textContent = appData.theme === 'dark' ? '☀️' : '🌙';
     
-    // إعدادات اللغة
-    const langBtn = document.getElementById('langBtn');
-    if (langBtn) {
-        langBtn.textContent = appData.lang === 'en' ? '🌐 EN' : '🌐 AR';
+    // --- القاموس الذكي (عامية مصرية / إنجليزي) ---
+const uiTranslations = {
+    'en': {
+        'loginTitle': 'Login', 'clientIdInput': 'Client Code (e.g., 1001)', 'clientPassInput': 'Password', 'loginBtn': 'Login',
+        'coachPlanTitle': 'Coach Tips 🎯', 'intakeTitle': 'Today\'s Intake 📊', 'calLabel': 'Calories', 'protLabel': 'Protein', 'carbLabel': 'Carbs', 'fatLabel': 'Fats',
+        'waterTitle': 'Water Intake 💧', 'reportTitle': 'Daily Report 🚀', 'dailyNotes': 'Write notes (e.g., slept well, tired...)', 'photoStatus': '📸 Add Progress Photo (Optional)', 'submitBtn': 'Send to Coach 🚀',
+        'addMealTitle': 'Add Meal 🍽️', 'camInstruction': 'Point camera at product barcode', 'searchInput': 'Search (Chicken, Rice, Oats...)', 'gramsInput': 'Amount (grams)', 'addBtn': 'Add +',
+        'todayLogTitle': 'Today\'s Food', 'resetBtn': 'Clear All 🔄',
+        'saveWorkoutBtn': 'Save Weights 💾',
+        'navDashboard': 'Dashboard', 'navNutrition': 'Nutrition', 'navWorkouts': 'Workouts',
+        'videoTitle': 'Exercise Tutorial'
+    },
+    'ar': {
+        'loginTitle': 'تسجيل الدخول', 'clientIdInput': 'كود العميل (مثال: 1001)', 'clientPassInput': 'الباسورد', 'loginBtn': 'ادخل',
+        'coachPlanTitle': 'نصايح الكوتش 🎯', 'intakeTitle': 'استهلاكك النهاردة 📊', 'calLabel': 'السعرات', 'protLabel': 'البروتين', 'carbLabel': 'الكارب', 'fatLabel': 'الدهون',
+        'waterTitle': 'شرب الماية 💧', 'reportTitle': 'تقريرك اليومي 🚀', 'dailyNotes': 'ملاحظاتك النهاردة (مثلاً: نمت كويس، حاسس بإرهاق...)', 'photoStatus': '📸 ضيف صورة تطور (اختياري)', 'submitBtn': 'ابعت التقرير للكوتش 🚀',
+        'addMealTitle': 'ضيف أكلة 🍽️', 'camInstruction': 'وجه الكاميرا لباركود المنتج', 'searchInput': 'دور على أكلة (فراخ، رز، شوفان...)', 'gramsInput': 'الكمية بالجرام', 'addBtn': 'ضيف +',
+        'todayLogTitle': 'أكل النهاردة', 'resetBtn': 'امسح الكل 🔄',
+        'saveWorkoutBtn': 'احفظ أوزانك 💾',
+        'navDashboard': 'الخطة', 'navNutrition': 'الأكل', 'navWorkouts': 'التمارين',
+        'videoTitle': 'شرح التمرين'
     }
+};
+
+function applyLanguage() {
+    const lang = appData.lang || 'ar';
+    const t = uiTranslations[lang];
+
+    // تغيير النصوص العادية
+    const setTxt = (id, key) => { const el = document.getElementById(id); if(el) el.innerText = t[key]; };
+    setTxt('loginTitle', 'loginTitle'); setTxt('loginBtn', 'loginBtn');
+    setTxt('coachPlanTitle', 'coachPlanTitle'); setTxt('intakeTitle', 'intakeTitle');
+    setTxt('calLabel', 'calLabel'); setTxt('protLabel', 'protLabel'); setTxt('carbLabel', 'carbLabel'); setTxt('fatLabel', 'fatLabel');
+    setTxt('waterTitle', 'waterTitle'); setTxt('reportTitle', 'reportTitle'); setTxt('submitBtn', 'submitBtn');
+    setTxt('addMealTitle', 'addMealTitle'); setTxt('camInstruction', 'camInstruction'); setTxt('addBtn', 'addBtn');
+    setTxt('todayLogTitle', 'todayLogTitle'); setTxt('resetBtn', 'resetBtn');
+    setTxt('saveWorkoutBtn', 'saveWorkoutBtn');
+    setTxt('navDashboard', 'navDashboard'); setTxt('navNutrition', 'navNutrition'); setTxt('navWorkouts', 'navWorkouts');
+    setTxt('videoTitle', 'videoTitle');
+
+    // تغيير الكلام الخفيف اللي جوه المستطيلات (Placeholders)
+    const setPlc = (id, key) => { const el = document.getElementById(id); if(el) el.placeholder = t[key]; };
+    setPlc('clientIdInput', 'clientIdInput'); setPlc('clientPassInput', 'clientPassInput');
+    setPlc('dailyNotes', 'dailyNotes'); setPlc('searchInput', 'searchInput'); setPlc('gramsInput', 'gramsInput');
+
+    // تظبيط نص زرار الصورة
+    const photoInput = document.getElementById('progressPhoto');
+    if (!photoInput || !photoInput.files || !photoInput.files[0]) {
+        setTxt('photoStatus', 'photoStatus');
+    }
+
+    // تظبيط الاتجاه والزرار من غير ريفرش
+    document.getElementById('langBtn').innerText = lang === 'en' ? '🌐 EN' : '🌐 AR';
+    document.body.dir = lang === 'en' ? 'ltr' : 'rtl';
+}
+
+function toggleLang() {
+    appData.lang = appData.lang === 'ar' ? 'en' : 'ar';
+    localStorage.setItem('jm_app_data', JSON.stringify(appData));
+    applyLanguage(); // بنطبق الترجمة فوراً في نفس اللحظة
+}
+
+function init() {
+    document.body.setAttribute('data-theme', appData.theme);
+    document.documentElement.setAttribute('data-theme', appData.theme);
+    document.getElementById('themeBtn').textContent = appData.theme === 'dark' ? '☀️' : '🌙';
     
-    document.body.dir = appData.lang === 'en' ? 'ltr' : 'rtl';
-    
-    // تغيير بعض النصوص لو اللغة إنجليزي
-    if(appData.lang === 'en') {
-        const searchInput = document.getElementById('searchInput');
-        const gramsInput = document.getElementById('gramsInput');
-        const loginBtn = document.getElementById('loginBtn');
-        
-        if (searchInput) searchInput.placeholder = "Search for food...";
-        if (gramsInput) gramsInput.placeholder = "Amount (g)";
-        if (loginBtn) loginBtn.innerText = "Login";
+    // تشغيل اللغة المختارة فوراً وقت فتح التطبيق
+    applyLanguage(); 
+}
+
+// دالة الصورة عشان تترجم بالإنجليزي لو العميل رفع صورة
+function updatePhotoStatus() {
+    const input = document.getElementById('progressPhoto'); const status = document.getElementById('photoStatus');
+    const isEn = (appData.lang === 'en');
+    if (input.files && input.files[0]) { 
+        status.innerHTML = (isEn ? "✅ Selected: " : "✅ تم اختيار الصورة: ") + input.files[0].name.substring(0, 15) + "..."; 
+        status.style.color = "var(--primary)"; status.style.borderStyle = "solid"; 
+    } else { 
+        status.innerHTML = isEn ? "📸 Add Progress Photo (Optional)" : "📸 ضيف صورة تطور (اختياري)"; 
+        status.style.color = "#fff"; status.style.borderStyle = "dashed"; 
     }
 }
 
@@ -155,12 +219,7 @@ function toggleTheme() {
     localStorage.setItem('jm_app_data', JSON.stringify(appData));
 }
 
-// --- كود تبديل اللغة ---
-function toggleLang() {
-    appData.lang = appData.lang === 'ar' ? 'en' : 'ar';
-    localStorage.setItem('jm_app_data', JSON.stringify(appData));
-    location.reload(); // بيعمل ريفرش عشان يطبق اللغة فوراً
-}
+
 
 // --- الدخول ---
 function login() {
