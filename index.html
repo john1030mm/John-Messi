@@ -92,9 +92,10 @@
         <h3 id="reportTitle" style="margin-bottom: 15px; font-size: 1.3rem;">تقريرك اليومي</h3>
         <textarea id="dailyNotes" rows="3" placeholder="ملاحظاتك النهاردة (مثلاً: نمت كويس، حاسس بإرهاق...)" style="margin-bottom: 15px;"></textarea>
         
+   <!-- زرار الصورة المحدث (بدون خطوط منقطة) -->
         <div style="margin-bottom: 15px;">
-            <label for="progressPhoto" style="display: block; background: rgba(0,0,0,0.2); padding: 12px; border-radius: 12px; border: 1px dashed rgba(255,255,255,0.5); text-align: center; cursor: pointer; color: #fff; transition: all 0.3s ease; backdrop-filter: blur(5px);">
-                <span id="photoStatus"> ضيف صورة تطورك </span>
+            <label id="photoLabel" for="progressPhoto" style="display: block; background: rgba(0,0,0,0.3); padding: 15px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); text-align: center; cursor: pointer; color: #fff; transition: all 0.3s ease; backdrop-filter: blur(5px);">
+                <span id="photoStatus"> ضيف صورة تطور</span>
                 <input type="file" id="progressPhoto" accept="image/*" style="display: none;" onchange="updatePhotoStatus()">
             </label>
         </div>
