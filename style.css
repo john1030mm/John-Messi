@@ -159,7 +159,7 @@ button:active { transform: scale(0.98); }
 }
 
 /* مسافة تحت عشان البار العائم ميغطيش على الكلام */
-body { padding-bottom: 110px; }
+body { padding-bottom: 125px; }
 /* التمارين (Workouts) */
 .exercise-card { background: rgba(0,0,0,0.02); border-radius: 15px; padding: 15px; margin-bottom: 15px; border: 1px solid var(--glass-border); }
 .exercise-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
