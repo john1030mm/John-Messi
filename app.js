@@ -122,9 +122,29 @@ function handleSwipe() {
 function activateTabByIndex(index) { const navItems = document.querySelectorAll('.nav-item'); switchTab(tabsList[index], navItems[index]); }
 
 function init() {
+    // إعدادات الثيم (الألوان)
     document.body.setAttribute('data-theme', appData.theme);
     document.documentElement.setAttribute('data-theme', appData.theme);
     document.getElementById('themeBtn').textContent = appData.theme === 'dark' ? '☀️' : '🌙';
+    
+    // إعدادات اللغة
+    const langBtn = document.getElementById('langBtn');
+    if (langBtn) {
+        langBtn.textContent = appData.lang === 'en' ? '🌐 EN' : '🌐 AR';
+    }
+    
+    document.body.dir = appData.lang === 'en' ? 'ltr' : 'rtl';
+    
+    // تغيير بعض النصوص لو اللغة إنجليزي
+    if(appData.lang === 'en') {
+        const searchInput = document.getElementById('searchInput');
+        const gramsInput = document.getElementById('gramsInput');
+        const loginBtn = document.getElementById('loginBtn');
+        
+        if (searchInput) searchInput.placeholder = "Search for food...";
+        if (gramsInput) gramsInput.placeholder = "Amount (g)";
+        if (loginBtn) loginBtn.innerText = "Login";
+    }
 }
 
 function toggleTheme() {
@@ -133,6 +153,13 @@ function toggleTheme() {
     document.documentElement.setAttribute('data-theme', appData.theme);
     document.getElementById('themeBtn').textContent = appData.theme === 'dark' ? '☀️' : '🌙';
     localStorage.setItem('jm_app_data', JSON.stringify(appData));
+}
+
+// --- كود تبديل اللغة ---
+function toggleLang() {
+    appData.lang = appData.lang === 'ar' ? 'en' : 'ar';
+    localStorage.setItem('jm_app_data', JSON.stringify(appData));
+    location.reload(); // بيعمل ريفرش عشان يطبق اللغة فوراً
 }
 
 // --- الدخول ---
@@ -356,5 +383,60 @@ async function analyzeFoodAI(input) {
         } catch (error) { showToast("❌ تعذر التعرف على الصورة."); }
     };
 }
+// --- كود الباركود والاسكانر ---
+let zxingReader = null;
 
+async function toggleScanner() {
+    const container = document.getElementById('scannerContainer');
+    if (isScannerOpen) {
+        if (zxingReader) zxingReader.reset();
+        container.style.display = 'none';
+        isScannerOpen = false;
+    } else {
+        container.style.display = 'block';
+        isScannerOpen = true;
+        if (!zxingReader) zxingReader = new ZXing.BrowserMultiFormatReader();
+        
+        try {
+            // تشغيل الكاميرا للبحث عن الباركود
+            zxingReader.decodeFromVideoDevice(null, 'scannerVideo', (result, err) => {
+                if (result) {
+                    zxingReader.reset();
+                    container.style.display = 'none';
+                    isScannerOpen = false;
+                    fetchProductByBarcode(result.text);
+                }
+            });
+        } catch (err) {
+            showToast("❌ لا يمكن الوصول للكاميرا");
+        }
+    }
+}
+
+async function fetchProductByBarcode(barcode) {
+    showToast("🔍 جاري البحث عن المنتج...");
+    try {
+        const res = await fetch(`https://world.openfoodfacts.org/api/v0/product/${barcode}.json`);
+        const data = await res.json();
+        
+        if (data.status === 1) {
+            const p = data.product;
+            const name = p.product_name || "منتج غير معروف";
+            const nut = p.nutriments;
+            // استخراج الماكروز لكل 100 جرام
+            const cal = nut['energy-kcal_100g'] || 0;
+            const pro = nut.proteins_100g || 0;
+            const carb = nut.carbohydrates_100g || 0;
+            const fat = nut.fat_100g || 0;
+            
+            selectedFood = { id: Date.now(), name: name + " 🛒", cal: cal, p: pro, c: carb, f: fat };
+            document.getElementById('searchInput').value = name;
+            showToast(`✅ تم العثور على: ${name}. أدخل الجرامات واضغط إضافة!`);
+        } else {
+            showToast("❌ المنتج غير مسجل في قاعدة البيانات.");
+        }
+    } catch (err) {
+        showToast("❌ خطأ في الاتصال بقاعدة البيانات.");
+    }
+}
 init();
