@@ -185,7 +185,11 @@ function renderWorkoutsUI() {
         }
         const parts = line.split('|'); const exName = parts[0] ? parts[0].trim() : `تمرين`; const setsCount = parseInt(parts[1]) || 3; const targetReps = parts[2] ? parts[2].trim() : "10-12"; const videoUrl = parts[3] ? parts[3].trim() : "";
         if (!currentDayOpen) { html += `<details open style="background: rgba(0,0,0,0.2); border: 1px solid var(--glass-border); border-radius: 15px; padding: 15px; margin-bottom: 15px;"><summary style="font-weight: bold; font-size: 1.2rem; color: var(--primary); cursor: pointer; list-style: none;">📅 تمارين الأسبوع</summary><div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.1);">`; currentDayOpen = true; }
-        html += `<div class="exercise-card" style="background: rgba(255,255,255,0.03); border-radius: 12px; padding: 15px; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.05);">
+        
+        // تأمين اسم التمرين برمجياً عشان الأوزان متدخلش في بعضها
+        const safeName = exName.replace(/"/g, '&quot;');
+        
+        html += `<div class="exercise-card" data-ex-name="${safeName}" style="background: rgba(255,255,255,0.03); border-radius: 12px; padding: 15px; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.05);">
             <div class="exercise-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                 <span class="exercise-title" style="font-weight: bold; font-size: 1.05rem; color: var(--text-primary);">🏋️ ${exName} (${targetReps} عدات)</span>
                 ${videoUrl ? `<button class="video-btn" onclick="openVideo('${videoUrl}')" style="background: var(--nav-icon); width: auto; padding: 5px 10px; margin: 0; border-radius: 8px; font-size: 0.85rem;">🎬 فيديو</button>` : ''}
@@ -194,14 +198,46 @@ function renderWorkoutsUI() {
             html += `<div class="set-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 0.95rem;">
                 <span>المجموعة ${s}:</span>
                 <div class="set-inputs" style="display: flex; gap: 8px; width: 65%;">
-                    <input type="number" placeholder="وزن" class="ex-weight" data-ex="${exName}" data-set="${s}" style="margin: 0; padding: 8px; text-align: center; border-radius: 8px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1);">
-                    <input type="number" placeholder="عدات" class="ex-reps" data-ex="${exName}" data-set="${s}" style="margin: 0; padding: 8px; text-align: center; border-radius: 8px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1);">
+                    <input type="number" placeholder="وزن" class="ex-weight" data-set="${s}" style="margin: 0; padding: 8px; text-align: center; border-radius: 8px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1);">
+                    <input type="number" placeholder="عدات" class="ex-reps" data-set="${s}" style="margin: 0; padding: 8px; text-align: center; border-radius: 8px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1);">
                 </div></div>`;
         }
         html += `</div>`;
     });
     if (currentDayOpen) html += `</div></details>`;
     container.innerHTML = html;
+}
+
+function saveWorkoutLog() {
+    let workoutText = ""; 
+    const cards = document.querySelectorAll('.exercise-card'); 
+    let hasData = false;
+    
+    // الطريقة الجديدة: بنلف على كل تمرين لوحده عشان الأرقام متتلغبطش
+    cards.forEach(card => {
+        const exName = card.getAttribute('data-ex-name');
+        const weights = card.querySelectorAll('.ex-weight');
+        
+        weights.forEach(wInput => {
+            const set = wInput.getAttribute('data-set');
+            const weight = wInput.value;
+            const rInput = card.querySelector(`.ex-reps[data-set="${set}"]`);
+            const reps = rInput ? rInput.value : 0;
+            
+            if (weight || (reps && reps > 0)) { 
+                workoutText += `- ${exName} (مجموعة ${set}): ${weight || 0} كجم × ${reps || 0} عدات\n`; 
+                hasData = true; 
+                wInput.value = ""; 
+                if(rInput) rInput.value = ""; 
+            }
+        });
+    });
+    
+    if (!hasData) return showToast(appData.lang === 'en' ? "⚠️ Enter weights to save!" : "⚠️ أدخل أوزان للحفظ!");
+    appData.dailyWorkouts = (appData.dailyWorkouts || "") + workoutText; 
+    localStorage.setItem('jm_app_data', JSON.stringify(appData));
+    showToast(appData.lang === 'en' ? "✅ Weights saved! Go to Dashboard to submit." : "✅ تم حفظ أوزانك بنجاح! اذهب لتاب الخطة واضغط إرسال التقرير."); 
+    activateTabByIndex(0);
 }
 
 function openVideo(url) {
@@ -214,17 +250,7 @@ function openVideo(url) {
 }
 function closeVideo() { document.getElementById('videoContainer').innerHTML = ''; document.getElementById('videoModal').style.display = 'none'; }
 
-function saveWorkoutLog() {
-    let workoutText = ""; const weights = document.querySelectorAll('.ex-weight'); let hasData = false;
-    weights.forEach(input => {
-        const ex = input.getAttribute('data-ex'); const set = input.getAttribute('data-set'); const weight = input.value;
-        const repsInput = document.querySelector(`.ex-reps[data-ex="${ex}"][data-set="${set}"]`); const reps = repsInput ? repsInput.value : 0;
-        if (weight || reps) { workoutText += `- ${ex} (مجموعة ${set}): ${weight || 0} كجم × ${reps || 0} عدات\n`; hasData = true; input.value = ""; if(repsInput) repsInput.value = ""; }
-    });
-    if (!hasData) return showToast(appData.lang === 'en' ? "⚠️ Enter weights to save!" : "⚠️ أدخل أوزان للحفظ!");
-    appData.dailyWorkouts = (appData.dailyWorkouts || "") + workoutText; localStorage.setItem('jm_app_data', JSON.stringify(appData));
-    showToast(appData.lang === 'en' ? "✅ Weights saved! Go to Dashboard to submit." : "✅ تم حفظ أوزانك بنجاح! اذهب لتاب الخطة واضغط إرسال التقرير."); activateTabByIndex(0);
-}
+
 
 function renderProgress() {
     if (!appData.target) return;
