@@ -100,7 +100,7 @@ button:active { transform: scale(0.98); }
 /* Bottom Navigation Bar (Liquid Glass / Floating iPhone Style) */
 .bottom-nav {
   position: fixed;
-  bottom: 25px; /* مرفوع عن الأرضية شوية */
+  bottom: 15px; /* مرفوع عن الأرضية شوية */
   left: 50%;
   transform: translateX(-50%);
   width: 90%;
