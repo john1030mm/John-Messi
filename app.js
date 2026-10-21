@@ -331,13 +331,33 @@ function renderMealsUI() {
 
 function updateWater(amt) { waterIntake += amt; if (waterIntake < 0) waterIntake = 0; document.getElementById('waterCount').innerText = `${waterIntake} 💧`; }
 
+// تحديث حالة زرار الصورة بدون خطوط مزعجة
 function updatePhotoStatus() {
-    const input = document.getElementById('progressPhoto'); const status = document.getElementById('photoStatus');
+    const input = document.getElementById('progressPhoto'); 
+    const status = document.getElementById('photoStatus');
+    const label = document.getElementById('photoLabel'); // استهداف المربع الخارجي
     const isEn = (appData.lang === 'en');
+    
     if (input && input.files && input.files[0]) { 
-        if(status) { status.innerHTML = (isEn ? "✅ Selected: " : "✅ تم اختيار الصورة: ") + input.files[0].name.substring(0, 15) + "..."; status.style.color = "var(--primary)"; status.style.borderStyle = "solid"; }
+        if(status) { 
+            status.innerHTML = (isEn ? "✅ Selected: " : "✅ تم اختيار الصورة: ") + input.files[0].name.substring(0, 15) + "..."; 
+            status.style.color = "var(--primary)"; 
+        }
+        if(label) {
+            // ينور أخضر خفيف لما تختار صورة
+            label.style.border = "1px solid var(--primary)";
+            label.style.background = "rgba(74, 222, 128, 0.1)";
+        }
     } else { 
-        if(status) { status.innerHTML = isEn ? "📸 Add Progress Photo (Optional)" : "📸 ضيف صورة تطور (اختياري)"; status.style.color = "#fff"; status.style.borderStyle = "dashed"; }
+        if(status) { 
+            status.innerHTML = isEn ? "📸 Add Progress Photo (Optional)" : "📸 ضيف صورة تطور (اختياري)"; 
+            status.style.color = "#fff"; 
+        }
+        if(label) {
+            // يرجع لشكله الطبيعي الشيك لو مفيش صورة
+            label.style.border = "1px solid rgba(255,255,255,0.1)";
+            label.style.background = "rgba(0,0,0,0.3)";
+        }
     }
 }
 
