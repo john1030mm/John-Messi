@@ -10,14 +10,19 @@
 <body data-theme="dark">
 
 <div class="container">
-    <!-- الـ Header الجديد -->
-    <div class="header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding: 0 5px;">
-        <h1 style="font-size: 1.6rem; font-weight: 800; margin: 0;">John <span style="color: var(--primary);">Messi</span></h1>
-        <div style="display: flex; gap: 10px; align-items: center;">
-            <button id="langBtn" onclick="toggleLang()" style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); color: var(--text-primary); border-radius: 12px; padding: 6px 12px; font-size: 0.9rem; font-weight: bold; cursor: pointer; backdrop-filter: blur(5px); box-shadow: none; width: auto; height: 35px; display: flex; align-items: center; justify-content: center;">🌐 AR</button>
-            <button id="themeBtn" onclick="toggleTheme()" style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); color: var(--text-primary); border-radius: 50%; width: 35px; height: 35px; font-size: 1.1rem; cursor: pointer; backdrop-filter: blur(5px); box-shadow: none; display: flex; align-items: center; justify-content: center; padding: 0;">☀️</button>
-        </div>
+    <!-- الـ Header باللوجو -->
+<div class="header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding: 0 5px;">
+    <div style="display: flex; align-items: center; gap: 10px;">
+        <!-- حط لينك اللوجو بتاعك مكان الرابط اللي بين علامتين التنصيص -->
+        <img src="https://ibb.co/Hfvtx9G5" alt="Logo" style="width: 45px; height: 45px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary);">
+        <h1 style="font-size: 1.6rem; font-weight: 800; margin: 0;">John<span style="color: var(--primary);">Messi</span></h1>
     </div>
+    
+    <div style="display: flex; gap: 10px; align-items: center;">
+        <button id="langBtn" onclick="toggleLang()" style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); color: var(--text-primary); border-radius: 12px; padding: 6px 12px; font-size: 0.9rem; font-weight: bold; cursor: pointer; backdrop-filter: blur(5px); box-shadow: none; width: auto; height: 35px; display: flex; align-items: center; justify-content: center;">🌐 AR</button>
+        <button id="themeBtn" onclick="toggleTheme()" style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); color: var(--text-primary); border-radius: 50%; width: 35px; height: 35px; font-size: 1.1rem; cursor: pointer; backdrop-filter: blur(5px); box-shadow: none; display: flex; align-items: center; justify-content: center; padding: 0;">☀️</button>
+    </div>
+</div>
 
     <!-- شاشة تسجيل الدخول -->
     <div id="loginSection" class="glass card">
@@ -135,8 +140,8 @@
             </div>
         </div>
 
-        <!-- التاب الثالث: التمارين -->
-        <div id="tab-workouts" class="tab-content">
+        <!-- التاب الثالث: التمارين (بخلفية مخصصة) -->
+<div id="tab-workouts" class="tab-content" style="background: linear-gradient(rgba(18, 18, 25, 0.85), rgba(18, 18, 25, 0.85)), url('https://ibb.co/Q7FdM2bG') center/cover no-repeat; padding: 20px; border-radius: 20px; min-height: 75vh; box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);">
             <div id="workoutsList"></div>
             <button id="saveWorkoutBtn" onclick="saveWorkoutLog()" style="margin-top: 15px; margin-bottom: 30px;">احفظ أوزانك</button>
         </div>
