@@ -80,6 +80,7 @@ const defaultFoods = [
 ];
 
 let foodDB = JSON.parse(localStorage.getItem('jm_food_db')) || [];
+// إجبار المتصفح على تحميل القائمة الجديدة لو الذاكرة قديمة
 if (foodDB.length < 50) {
     foodDB = defaultFoods;
     localStorage.setItem('jm_food_db', JSON.stringify(foodDB));
@@ -145,7 +146,6 @@ function login() {
         .then(data => {
             if (data.status === 'success') {
                 currentClientId = id;
-                appData.clientPass = pass; // حفظ الباسورد للإرسال الآمن
                 appData.target = { cal: data.calories, pro: data.protein, carb: data.carbs, fat: data.fats };
                 document.getElementById('coachPlanText').textContent = data.plan || "التزم بالماكروز المحددة."; 
                 clientWorkoutsData = data.workouts || ""; 
@@ -250,6 +250,7 @@ function handleSearch() {
             box.appendChild(div);
         });
     } else {
+        // ميزة البحث بالذكاء الاصطناعي لو الأكلة مش موجودة
         let div = document.createElement('div'); div.className = 'suggestion-item'; 
         div.innerHTML = `✨ اسأل الـ AI عن: "${q}"`;
         div.onpointerdown = (e) => { e.preventDefault(); searchFoodAIText(q); box.style.display = 'none'; };
@@ -257,6 +258,7 @@ function handleSearch() {
     }
 }
 
+// دالة الذكاء الاصطناعي للبحث بالنص (ميزة جديدة)
 async function searchFoodAIText(foodName) {
     showToast(`✨ جاري سؤال الذكاء الاصطناعي عن "${foodName}"...`);
     const promptText = `أنت خبير تغذية. قدر السعرات الحرارية والماكروز لـ 100 جرام من "${foodName}". رد بكود JSON فقط بهذا الشكل: {"name": "${foodName}", "cal": السعرات, "pro": البروتين, "carb": الكارب, "fat": الدهون}`;
@@ -267,9 +269,11 @@ async function searchFoodAIText(foodName) {
         let aiText = data.candidates[0].content.parts[0].text.replace(/```json/g, "").replace(/```/g, "").trim();
         const aiResult = JSON.parse(aiText);
         
+        // حفظ الأكلة في قاعدة البيانات عشان تظهر بعد كده
         const newFood = { id: Date.now(), name: aiResult.name + " (AI)", cal: aiResult.cal, p: aiResult.pro, c: aiResult.carb, f: aiResult.fat };
         foodDB.push(newFood); localStorage.setItem('jm_food_db', JSON.stringify(foodDB));
         
+        // اختيارها تلقائياً للعميل
         selectedFood = newFood; document.getElementById('searchInput').value = newFood.name;
         showToast("✅ الـ AI جابلك الماكروز! دخل الجرامات واضغط إضافة.");
     } catch (error) { showToast("❌ الـ AI مقدرش يتعرف على الأكلة."); }
@@ -307,21 +311,7 @@ function renderMealsUI() {
 
 function updateWater(amt) { waterIntake += amt; if (waterIntake < 0) waterIntake = 0; document.getElementById('waterCount').innerText = `${waterIntake} 💧`; }
 
-// --- إرسال التقرير والصور ---
-function updatePhotoStatus() {
-    const input = document.getElementById('progressPhoto');
-    const status = document.getElementById('photoStatus');
-    if (input.files && input.files[0]) {
-        status.innerHTML = "✅ تم اختيار الصورة: " + input.files[0].name.substring(0, 15) + "...";
-        status.style.color = "var(--primary)";
-        status.style.borderStyle = "solid";
-    } else {
-        status.innerHTML = "📸 أضف صورة تطور (اختياري)";
-        status.style.color = "var(--text-secondary)";
-        status.style.borderStyle = "dashed";
-    }
-}
-
+// --- إرسال التقرير النهائي والتمارين ---
 async function saveDailyLog() {
     document.getElementById('submitBtn').innerText = "جاري الإرسال...";
     let notes = document.getElementById('dailyNotes').value;
@@ -334,25 +324,18 @@ async function saveDailyLog() {
         try { const imgRes = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_KEY}`, { method: 'POST', body: formData }); photoUrl = (await imgRes.json()).data.url; } catch(e) {}
     }
     
-    // إرسال الباسورد مع التقرير للأمان
-    fetch(`${SCRIPT_URL}?action=saveLog&clientId=${currentClientId}&pass=${encodeURIComponent(appData.clientPass || "")}&water=${waterIntake}&notes=${encodeURIComponent(notes)}&photoUrl=${encodeURIComponent(photoUrl)}&workouts=${encodeURIComponent(workoutsData)}`)
+    fetch(`${SCRIPT_URL}?action=saveLog&clientId=${currentClientId}&water=${waterIntake}&notes=${encodeURIComponent(notes)}&photoUrl=${encodeURIComponent(photoUrl)}&workouts=${encodeURIComponent(workoutsData)}`)
         .then(res => res.json()).then(data => {
             if (data.status === 'success') { 
                 showToast("تم إرسال التقرير والتمارين بنجاح 🚀"); 
                 document.getElementById('submitBtn').innerText = "إرسال التقرير للكوتش 🚀"; 
                 document.getElementById('dailyNotes').value = ""; appData.dailyWorkouts = ""; localStorage.setItem('jm_app_data', JSON.stringify(appData));
-                // تفريغ حقل الصورة
-                if(photoInput) photoInput.value = "";
-                updatePhotoStatus();
-            } else {
-                showToast("حدث خطأ! تأكد من صحة البيانات.");
-                document.getElementById('submitBtn').innerText = "إرسال التقرير للكوتش 🚀";
             }
-        }).catch(err => {
-            showToast("خطأ في الاتصال بالخادم");
-            document.getElementById('submitBtn').innerText = "إرسال التقرير للكوتش 🚀";
         });
 }
+
+function exportDB() { navigator.clipboard.writeText(btoa(unescape(encodeURIComponent(JSON.stringify(foodDB))))); showToast("تم نسخ قاعدة الأكلات!"); }
+function importDB() { const code = prompt("أدخل كود النسخ الاحتياطي:"); if(code) { try { foodDB = JSON.parse(decodeURIComponent(escape(atob(code.trim())))); localStorage.setItem('jm_food_db', JSON.stringify(foodDB)); showToast("تم الاستعادة بنجاح!"); } catch(e) { showToast("كود غير صحيح!"); } } }
 
 // تحليل الصور بالذكاء الاصطناعي
 async function analyzeFoodAI(input) {
