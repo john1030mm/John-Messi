@@ -97,10 +97,15 @@ function switchTab(tabName, element) {
     element.classList.add('active');
 }
 
+// --- تفعيل السحب (Swipe) على البار السفلي فقط ---
 let touchstartX = 0; let touchstartY = 0; let touchendX = 0; let touchendY = 0;
-document.addEventListener('touchstart', e => { touchstartX = e.changedTouches[0].screenX; touchstartY = e.changedTouches[0].screenY; }, {passive: true});
-document.addEventListener('touchend', e => { touchendX = e.changedTouches[0].screenX; touchendY = e.changedTouches[0].screenY; handleSwipe(); }, {passive: true});
-function handleSwipe() {
+window.addEventListener('DOMContentLoaded', () => {
+    const btmNav = document.getElementById('bottomNav');
+    if (btmNav) {
+        btmNav.addEventListener('touchstart', e => { touchstartX = e.changedTouches[0].screenX; touchstartY = e.changedTouches[0].screenY; }, {passive: true});
+        btmNav.addEventListener('touchend', e => { touchendX = e.changedTouches[0].screenX; touchendY = e.changedTouches[0].screenY; handleSwipe(); }, {passive: true});
+    }
+});function handleSwipe() {
     const xDiff = Math.abs(touchendX - touchstartX); const yDiff = Math.abs(touchendY - touchstartY);
     if (xDiff > yDiff && xDiff > 60) {
         if (touchendX < touchstartX) { if(currentTabIndex < tabsList.length - 1) { currentTabIndex++; activateTabByIndex(currentTabIndex); } } 
