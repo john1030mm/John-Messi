@@ -184,18 +184,21 @@ body { padding-bottom: 110px; }
 #toast { visibility: hidden; min-width: 250px; background: rgba(0,0,0,0.8); color: #fff; text-align: center; border-radius: 12px; padding: 16px; position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 2000; opacity: 0; transition: 0.3s; backdrop-filter: blur(5px); }
 #toast.show { visibility: visible; opacity: 1; top: 40px; }
 /* البحث والاقتراحات (التصميم المنبثق الاحترافي) */
+/* البحث والاقتراحات (التصميم المنبثق الاحترافي) */
 #suggestions {
     background: var(--bg-card);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border: 1px solid var(--glass-border);
     border-radius: 12px;
-    max-height: 250px;
+    max-height: 200px; /* قللنا الارتفاع شوية عشان ما تملقش الشاشة */
     overflow-y: auto;
     display: none;
     margin-bottom: 15px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
     position: absolute;
+    top: 100%; /* ده بيخليها تبدأ من تحت حقل البحث مباشرة */
+    left: 0;
     width: 100%;
     z-index: 100;
 }
