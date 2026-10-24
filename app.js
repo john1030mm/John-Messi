@@ -398,44 +398,35 @@ async function saveDailyLog() {
 }
 
 async function analyzeFoodAI(input) {
-    const file = input.files[0]; if (!file) return;
+    const file = input.files[0]; 
+    if (!file) return;
     const isEn = appData.lang === 'en';
     showToast(isEn ? "✨ Analyzing image... ⏳" : "✨ جاري التحليل... ⏳");
-    const reader = new FileReader(); reader.readAsDataURL(file);
+    const reader = new FileReader(); 
+    reader.readAsDataURL(file);
     reader.onload = async function () {
         const base64Image = reader.result.split(',')[1];
-        const promptText = `أنت خبير تغذية. حلل صورة الطعام هذه. قدر الحجم بالجرامات، ثم احسب السعرات، البروتين، الكارب، والدهون. رد بـ JSON فقط: {"name": "اسم الوجبة والكمية", "cal": السعرات, "pro": البروتين, "carb": الكارب, "fat": الدهون}`;
+        const promptText = `أنت خبير تغذية محترف. حلل صورة الطعام هذه. تعرف على المكونات، قدر الحجم والوزن بالجرامات تقريباً بمجرد النظر، ثم احسب السعرات الحرارية، البروتين، الكاربوهيدرات، والدهون الكلية. رد بكود JSON فقط لا غير بهذا الشكل بالضبط: {"name": "اسم الوجبة والكمية التقريبية", "cal": السعرات, "pro": البروتين, "carb": الكارب, "fat": الدهون}`;
         const requestBody = { contents: [{ parts: [{ text: promptText }, { inlineData: { mimeType: file.type, data: base64Image } }] }] };
         try {
             const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent`, { 
                 method: "POST", 
-                headers: { 
-                    "Content-Type": "application/json",
-                    "x-goog-api-key": GEMINI_KEY
-                }, 
+                headers: { "Content-Type": "application/json", "x-goog-api-key": GEMINI_KEY }, 
                 body: JSON.stringify(requestBody) 
             });
-            
             const data = await response.json();
-            
-            if (data.error) {
-                showToast(isEn ? "❌ API Error." : "❌ خطأ في السيرفر أو المفتاح.");
-                input.value = "";
-                return;
-            }
-
+            if (data.error) { showToast(isEn ? "❌ API Error." : "❌ خطأ في السيرفر أو المفتاح."); input.value = ""; return; }
             let aiText = data.candidates[0].content.parts[0].text.replace(/```json/g, "").replace(/```/g, "").trim();
             const aiResult = JSON.parse(aiText);
-            
             addMealToLog("✨ " + aiResult.name, aiResult.cal, aiResult.pro, aiResult.carb, aiResult.fat);
             showToast(isEn ? "✅ Meal calculated & added!" : "✅ تم حساب الوجبة وإضافتها بنجاح!");
-            
             input.value = ""; 
         } catch (error) { 
             showToast(isEn ? "❌ Couldn't recognize the meal." : "❌ الصورة مش واضحة، حاول تصور الطبق تاني."); 
             input.value = ""; 
         }
-
+    };
+}
 async function toggleScanner() {
     const container = document.getElementById('scannerContainer');
     if (isScannerOpen) { if (zxingReader) zxingReader.reset(); container.style.display = 'none'; isScannerOpen = false;
