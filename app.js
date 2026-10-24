@@ -409,9 +409,9 @@ async function analyzeFoodAI(input) {
         const promptText = `أنت خبير تغذية محترف. حلل صورة الطعام هذه. تعرف على المكونات، قدر الحجم والوزن بالجرامات تقريباً بمجرد النظر، ثم احسب السعرات الحرارية، البروتين، الكاربوهيدرات، والدهون الكلية. رد بكود JSON فقط لا غير بهذا الشكل بالضبط: {"name": "اسم الوجبة والكمية التقريبية", "cal": السعرات, "pro": البروتين, "carb": الكارب, "fat": الدهون}`;
         const requestBody = { contents: [{ parts: [{ text: promptText }, { inlineData: { mimeType: file.type, data: base64Image } }] }] };
         try {
-            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent`, { 
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`, { 
                 method: "POST", 
-                headers: { "Content-Type": "application/json", "x-goog-api-key": GEMINI_KEY }, 
+                headers: { "Content-Type": "application/json" }, 
                 body: JSON.stringify(requestBody) 
             });
             const data = await response.json();
