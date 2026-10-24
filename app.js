@@ -3,7 +3,7 @@ const GEMINI_KEY = "AQ.Ab8RN6ID12kXU3ewXIpxB2ykfE6eBCzMMIimvzOYuKy4agfesA"; // �
 const IMGBB_KEY = "3b5826821ec6486f42b5f719c97795ff";  
 
 let appData = JSON.parse(localStorage.getItem('jm_app_data')) || { theme: 'dark', lang: 'ar', meals: [], target: null, dailyWorkouts: "", history: [] };
-if(!appData.history) appData.history = []; // للتأكد إن السجل موجود
+if(!appData.history) appData.history = [];
 
 const defaultFoods = [
   {id: 1, name: "صدور دجاج مسلوق/مشوي", cal: 165, p: 31, c: 0, f: 3.6}, {id: 2, name: "وراك دجاج مشوية", cal: 209, p: 26, c: 0, f: 10.9}, {id: 3, name: "لحم بقري صافي مشوي", cal: 250, p: 26, c: 0, f: 15}, {id: 4, name: "كفتة مشوية", cal: 250, p: 18, c: 3, f: 18}, {id: 5, name: "سمك بلطي مشوي", cal: 128, p: 26, c: 0, f: 2.7}, {id: 6, name: "سمك فيليه مشوي", cal: 105, p: 24, c: 0, f: 1.2}, {id: 7, name: "سلمون مشوي", cal: 206, p: 22, c: 0, f: 13}, {id: 8, name: "تونة معلبة في ماء (مصفاة)", cal: 116, p: 26, c: 0, f: 1}, {id: 9, name: "تونة معلبة في زيت (مصفاة)", cal: 198, p: 29, c: 0, f: 8},
@@ -13,7 +13,6 @@ const defaultFoods = [
   {id: 35, name: "موز", cal: 89, p: 1.1, c: 23, f: 0.3}, {id: 36, name: "تفاح", cal: 52, p: 0.3, c: 14, f: 0.2}, {id: 37, name: "برتقال", cal: 47, p: 0.9, c: 12, f: 0.1}, {id: 38, name: "عنب", cal: 69, p: 0.7, c: 18, f: 0.2}, {id: 39, name: "بطيخ", cal: 30, p: 0.6, c: 7.6, f: 0.2}, {id: 40, name: "فراولة", cal: 32, p: 0.7, c: 7.7, f: 0.3}, {id: 41, name: "مانجو", cal: 60, p: 0.8, c: 15, f: 0.4}, {id: 43, name: "تمر", cal: 282, p: 2.5, c: 75, f: 0.4},
   {id: 44, name: "زيت زيتون", cal: 884, p: 0, c: 0, f: 100}, {id: 45, name: "زبدة حيواني", cal: 717, p: 0.9, c: 0.1, f: 81}, {id: 46, name: "لوز نيء", cal: 579, p: 21, c: 22, f: 50}, {id: 47, name: "فول سوداني", cal: 567, p: 26, c: 16, f: 49}, {id: 48, name: "زبدة فول سوداني", cal: 588, p: 25, c: 20, f: 50}, {id: 50, name: "عين جمل", cal: 654, p: 15, c: 14, f: 65},
   {id: 51, name: "كشري مصري", cal: 160, p: 6, c: 27, f: 3}, {id: 52, name: "محشي كرنب", cal: 130, p: 3, c: 16, f: 6}, {id: 53, name: "محشي ورق عنب", cal: 170, p: 4, c: 20, f: 8}, {id: 54, name: "طعمية (فلافل) مقلية", cal: 333, p: 13, c: 32, f: 18}, {id: 55, name: "شاورما دجاج (بدون خبز)", cal: 180, p: 20, c: 5, f: 9}, {id: 56, name: "شاورما لحم (بدون خبز)", cal: 230, p: 18, c: 6, f: 15}, {id: 57, name: "بيتزا", cal: 266, p: 11, c: 33, f: 10}, {id: 60, name: "كبدة إسكندراني", cal: 190, p: 22, c: 4, f: 9},
-  {id: 61, name: "طعمية (فلافل) مقلية", cal: 333, p: 13, c: 32, f: 18}, {id: 62, name: "خيار", cal: 15, p: 0.7, c: 3.6, f: 0.1}, {id: 63, name: "خس", cal: 15, p: 1.4, c: 2.9, f: 0.2}, {id: 64, name: "بروكلي مسلوق", cal: 35, p: 2.4, c: 7.2, f: 0.4}, {id: 67, name: "بصل", cal: 40, p: 1.1, c: 9, f: 0.1},
   {id: 71, name: "واي بروتين (سكوب 30ج)", cal: 383, p: 80, c: 10, f: 5}, {id: 73, name: "ماس جينر (سكوب)", cal: 380, p: 16, c: 75, f: 2.5}
 ];
 
@@ -21,12 +20,25 @@ let foodDB = JSON.parse(localStorage.getItem('jm_food_db')) || defaultFoods;
 let currentClientId = ""; let waterIntake = 0; let selectedFood = null; let clientWorkoutsData = "";
 let zxingReader = null; let isScannerOpen = false;
 
-// --- القاموس الذكي ---
+// --- الحفظ التلقائي في الخلفية (Cloud Sync) ---
+let syncTimer = null;
+function syncStateToServer() {
+    if(!currentClientId) return;
+    clearTimeout(syncTimer);
+    // هنستنى ثانيتين بعد آخر إضافة عشان مانعملش ضغط على السيرفر
+    syncTimer = setTimeout(() => {
+        let stateObj = { meals: appData.meals, water: waterIntake, workouts: appData.dailyWorkouts };
+        let stateStr = JSON.stringify(stateObj);
+        fetch(`${SCRIPT_URL}?action=syncState&clientId=${currentClientId}&pass=${encodeURIComponent(appData.clientPass)}&state=${encodeURIComponent(stateStr)}`)
+        .catch(e => console.log('Background sync failed'));
+    }, 2000); 
+}
+
 const uiTranslations = {
     'en': {
         'loginTitle': 'Login', 'clientIdInput': 'Client Code (e.g., 1001)', 'clientPassInput': 'Password', 'loginBtn': 'Login',
         'coachPlanTitle': 'Coach Tips 🎯', 'intakeTitle': 'Today\'s Intake 📊', 'calLabel': 'Calories', 'protLabel': 'Protein', 'carbLabel': 'Carbs', 'fatLabel': 'Fats',
-        'waterTitle': 'Water Intake 💧', 'reportTitle': 'Daily Report 🚀', 'dailyNotes': 'Write notes (e.g., slept well, tired...)', 'photoStatus': '📸 Add Progress Photo (Optional)', 'submitBtn': 'Send to Coach 🚀',
+        'waterTitle': 'Water Intake 💧', 'reportTitle': 'Daily Report 🚀', 'dailyNotes': 'Write notes (e.g., slept well, tired...)', 'submitBtn': 'Send to Coach 🚀',
         'addMealTitle': 'Add Meal 🍽️', 'camInstruction': 'Point camera at product barcode', 'searchInput': 'Search (Chicken, Rice...)', 'gramsInput': 'Amount (grams)', 'addBtn': 'Add +',
         'todayLogTitle': 'Today\'s Food', 'resetBtn': 'Clear All 🔄',
         'saveWorkoutBtn': 'Save Weights 💾',
@@ -36,7 +48,7 @@ const uiTranslations = {
     'ar': {
         'loginTitle': 'تسجيل الدخول', 'clientIdInput': 'كود العميل (مثال: 1001)', 'clientPassInput': 'الباسورد', 'loginBtn': 'ادخل',
         'coachPlanTitle': 'نصايح الكوتش 🎯', 'intakeTitle': 'استهلاكك النهاردة 📊', 'calLabel': 'السعرات', 'protLabel': 'البروتين', 'carbLabel': 'الكارب', 'fatLabel': 'الدهون',
-        'waterTitle': 'شرب الماية 💧', 'reportTitle': 'تقريرك اليومي 🚀', 'dailyNotes': 'ملاحظاتك النهاردة (مثلاً: نمت كويس، حاسس بإرهاق...)', 'photoStatus': '📸 ضيف صورة تطور (اختياري)', 'submitBtn': 'ابعت التقرير للكوتش 🚀',
+        'waterTitle': 'شرب الماية 💧', 'reportTitle': 'تقريرك اليومي 🚀', 'dailyNotes': 'ملاحظاتك النهاردة (مثلاً: نمت كويس، حاسس بإرهاق...)', 'submitBtn': 'ابعت التقرير للكوتش 🚀',
         'addMealTitle': 'ضيف أكلة 🍽️', 'camInstruction': 'وجه الكاميرا لباركود المنتج', 'searchInput': 'دور على أكلة (فراخ، رز، شوفان...)', 'gramsInput': 'الكمية بالجرام', 'addBtn': 'ضيف +',
         'todayLogTitle': 'أكل النهاردة', 'resetBtn': 'امسح الكل 🔄',
         'saveWorkoutBtn': 'احفظ أوزانك 💾',
@@ -48,7 +60,6 @@ const uiTranslations = {
 function applyLanguage() {
     const lang = appData.lang || 'ar';
     const t = uiTranslations[lang];
-
     const setTxt = (id, key) => { const el = document.getElementById(id); if(el) el.innerText = t[key]; };
     setTxt('loginTitle', 'loginTitle'); setTxt('loginBtn', 'loginBtn');
     setTxt('coachPlanTitle', 'coachPlanTitle'); setTxt('intakeTitle', 'intakeTitle');
@@ -64,9 +75,7 @@ function applyLanguage() {
     setPlc('clientIdInput', 'clientIdInput'); setPlc('clientPassInput', 'clientPassInput');
     setPlc('dailyNotes', 'dailyNotes'); setPlc('searchInput', 'searchInput'); setPlc('gramsInput', 'gramsInput');
 
-    updatePhotoStatus();
-    renderHistoryUI(); 
-
+    updatePhotoStatus(); renderHistoryUI(); 
     document.getElementById('langBtn').innerText = lang === 'en' ? '🌐 EN' : '🌐 AR';
     document.body.dir = lang === 'en' ? 'ltr' : 'rtl';
 }
@@ -76,7 +85,7 @@ function showToast(msg) {
     setTimeout(() => t.className = t.className.replace("show", ""), 3000); 
 }
 
-const tabsList = ['dashboard', 'nutrition', 'workouts', 'history']; // ضفنا التاب الرابع هنا
+const tabsList = ['dashboard', 'nutrition', 'workouts', 'history']; 
 let currentTabIndex = 0;
 
 function switchTab(tabName, element) {
@@ -84,14 +93,10 @@ function switchTab(tabName, element) {
     document.querySelectorAll('.tab-content').forEach(tab => { tab.classList.remove('active'); tab.style.animation = 'none'; });
     document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
     const activeTab = document.getElementById(`tab-${tabName}`);
-    if(activeTab) {
-        activeTab.classList.add('active');
-        void activeTab.offsetWidth; activeTab.style.animation = 'swipeAnim 0.4s cubic-bezier(0.25, 1, 0.5, 1) forwards';
-    }
+    if(activeTab) { activeTab.classList.add('active'); void activeTab.offsetWidth; activeTab.style.animation = 'swipeAnim 0.4s cubic-bezier(0.25, 1, 0.5, 1) forwards'; }
     if(element) element.classList.add('active');
 }
 
-// --- تفعيل السحب (Swipe) على البار السفلي فقط ---
 let touchstartX = 0; let touchstartY = 0; let touchendX = 0; let touchendY = 0;
 window.addEventListener('DOMContentLoaded', () => {
     const btmNav = document.getElementById('bottomNav');
@@ -145,6 +150,22 @@ function login() {
                 document.getElementById('coachPlanText').textContent = data.plan || (appData.lang === 'en' ? "Follow the macros." : "التزم بالماكروز المحددة."); 
                 clientWorkoutsData = data.workouts || ""; 
                 
+                // إضافة الترحيب بالاسم
+                const isEn = appData.lang === 'en';
+                const greetEl = document.getElementById('greetingTitle');
+                if(greetEl) greetEl.innerText = isEn ? `Hello, ${data.name}! 👋` : `ازيك يا ${data.name}! 👋`;
+
+                // مزامنة حالة اليوم (عشان لو فتح من جهاز تاني)
+                if (data.savedState) {
+                    try {
+                        let st = JSON.parse(data.savedState);
+                        appData.meals = st.meals || [];
+                        waterIntake = st.water || 0;
+                        appData.dailyWorkouts = st.workouts || "";
+                        localStorage.setItem('jm_app_data', JSON.stringify(appData));
+                    } catch(e) {}
+                }
+
                 if (data.globalFoods && data.globalFoods.length > 0) {
                     let localMap = new Map();
                     defaultFoods.forEach(f => localMap.set(f.name, f));
@@ -157,8 +178,9 @@ function login() {
                 document.getElementById('mainApp').style.display = 'block';
                 document.getElementById('bottomNav').style.display = 'flex';
                 
-                renderProgress(); renderMealsUI(); renderWorkoutsUI(); renderHistoryUI();
-                showToast(appData.lang === 'en' ? "Login Successful! 🔥" : "تم الدخول بنجاح! 🔥");
+                renderProgress(); renderMealsUI(); renderWorkoutsUI(); renderHistoryUI(); 
+                document.getElementById('waterCount').innerText = `${waterIntake} 💧`; // تحديث شاشة الماية
+                showToast(isEn ? "Login Successful! 🔥" : "تم الدخول بنجاح! 🔥");
             } else { 
                 showToast(appData.lang === 'en' ? "Invalid Credentials!" : "بيانات غير صحيحة!"); 
                 document.getElementById('loginBtn').innerText = appData.lang === 'en' ? "Login" : "ادخل"; 
@@ -186,9 +208,7 @@ function renderWorkoutsUI() {
         const parts = line.split('|'); const exName = parts[0] ? parts[0].trim() : `تمرين`; const setsCount = parseInt(parts[1]) || 3; const targetReps = parts[2] ? parts[2].trim() : "10-12"; const videoUrl = parts[3] ? parts[3].trim() : "";
         if (!currentDayOpen) { html += `<details open style="background: rgba(0,0,0,0.2); border: 1px solid var(--glass-border); border-radius: 15px; padding: 15px; margin-bottom: 15px;"><summary style="font-weight: bold; font-size: 1.2rem; color: var(--primary); cursor: pointer; list-style: none;">📅 تمارين الأسبوع</summary><div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.1);">`; currentDayOpen = true; }
         
-        // تأمين اسم التمرين برمجياً عشان الأوزان متدخلش في بعضها
         const safeName = exName.replace(/"/g, '&quot;');
-        
         html += `<div class="exercise-card" data-ex-name="${safeName}" style="background: rgba(255,255,255,0.03); border-radius: 12px; padding: 15px; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.05);">
             <div class="exercise-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                 <span class="exercise-title" style="font-weight: bold; font-size: 1.05rem; color: var(--text-primary);">🏋️ ${exName} (${targetReps} عدات)</span>
@@ -208,38 +228,6 @@ function renderWorkoutsUI() {
     container.innerHTML = html;
 }
 
-function saveWorkoutLog() {
-    let workoutText = ""; 
-    const cards = document.querySelectorAll('.exercise-card'); 
-    let hasData = false;
-    
-    // الطريقة الجديدة: بنلف على كل تمرين لوحده عشان الأرقام متتلغبطش
-    cards.forEach(card => {
-        const exName = card.getAttribute('data-ex-name');
-        const weights = card.querySelectorAll('.ex-weight');
-        
-        weights.forEach(wInput => {
-            const set = wInput.getAttribute('data-set');
-            const weight = wInput.value;
-            const rInput = card.querySelector(`.ex-reps[data-set="${set}"]`);
-            const reps = rInput ? rInput.value : 0;
-            
-            if (weight || (reps && reps > 0)) { 
-                workoutText += `- ${exName} (مجموعة ${set}): ${weight || 0} كجم × ${reps || 0} عدات\n`; 
-                hasData = true; 
-                wInput.value = ""; 
-                if(rInput) rInput.value = ""; 
-            }
-        });
-    });
-    
-    if (!hasData) return showToast(appData.lang === 'en' ? "⚠️ Enter weights to save!" : "⚠️ أدخل أوزان للحفظ!");
-    appData.dailyWorkouts = (appData.dailyWorkouts || "") + workoutText; 
-    localStorage.setItem('jm_app_data', JSON.stringify(appData));
-    showToast(appData.lang === 'en' ? "✅ Weights saved! Go to Dashboard to submit." : "✅ تم حفظ أوزانك بنجاح! اذهب لتاب الخطة واضغط إرسال التقرير."); 
-    activateTabByIndex(0);
-}
-
 function openVideo(url) {
     const container = document.getElementById('videoContainer'); let embedUrl = url;
     if (url.includes("watch?v=")) embedUrl = url.replace("watch?v=", "embed/");
@@ -250,7 +238,27 @@ function openVideo(url) {
 }
 function closeVideo() { document.getElementById('videoContainer').innerHTML = ''; document.getElementById('videoModal').style.display = 'none'; }
 
-
+function saveWorkoutLog() {
+    let workoutText = ""; const cards = document.querySelectorAll('.exercise-card'); let hasData = false;
+    cards.forEach(card => {
+        const exName = card.getAttribute('data-ex-name');
+        const weights = card.querySelectorAll('.ex-weight');
+        weights.forEach(wInput => {
+            const set = wInput.getAttribute('data-set'); const weight = wInput.value;
+            const rInput = card.querySelector(`.ex-reps[data-set="${set}"]`); const reps = rInput ? rInput.value : 0;
+            if (weight || (reps && reps > 0)) { 
+                workoutText += `- ${exName} (مجموعة ${set}): ${weight || 0} كجم × ${reps || 0} عدات\n`; 
+                hasData = true; wInput.value = ""; if(rInput) rInput.value = ""; 
+            }
+        });
+    });
+    if (!hasData) return showToast(appData.lang === 'en' ? "⚠️ Enter weights to save!" : "⚠️ أدخل أوزان للحفظ!");
+    appData.dailyWorkouts = (appData.dailyWorkouts || "") + workoutText; 
+    localStorage.setItem('jm_app_data', JSON.stringify(appData));
+    syncStateToServer(); // مزامنة للسيرفر
+    showToast(appData.lang === 'en' ? "✅ Weights saved! Go to Dashboard to submit." : "✅ تم حفظ أوزانك بنجاح! اذهب لتاب الخطة واضغط إرسال التقرير."); 
+    activateTabByIndex(0);
+}
 
 function renderProgress() {
     if (!appData.target) return;
@@ -267,10 +275,8 @@ function handleSearch() {
     const q = document.getElementById('searchInput').value.toLowerCase().trim(); 
     const box = document.getElementById('suggestions'); box.innerHTML = ''; 
     if (q === '') { box.style.display = 'none'; return; }
-    
     const results = foodDB.filter(f => f.name.toLowerCase().includes(q));
     box.style.display = 'block';
-    
     if (results.length > 0) {
         results.forEach(f => {
             let div = document.createElement('div'); div.className = 'suggestion-item'; div.innerText = f.name;
@@ -293,12 +299,10 @@ async function searchFoodAIText(foodName) {
         const data = await response.json();
         let aiText = data.candidates[0].content.parts[0].text.replace(/```json/g, "").replace(/```/g, "").trim();
         const aiResult = JSON.parse(aiText);
-        
         const newFood = { id: Date.now(), name: aiResult.name + " 🌍", cal: aiResult.cal, p: aiResult.pro, c: aiResult.carb, f: aiResult.fat };
         foodDB.push(newFood); localStorage.setItem('jm_food_db', JSON.stringify(foodDB));
         selectedFood = newFood; document.getElementById('searchInput').value = newFood.name;
         showToast(appData.lang === 'en' ? "✅ AI found it! Enter amount." : "✅ الـ AI جابها! دخل الجرامات واضغط إضافة.");
-        
         fetch(`${SCRIPT_URL}?action=addFood&name=${encodeURIComponent(aiResult.name)}&cal=${aiResult.cal}&p=${aiResult.pro}&c=${aiResult.carb}&f=${aiResult.fat}`).catch(e => console.log("error"));
     } catch (error) { showToast(appData.lang === 'en' ? "❌ AI couldn't recognize it." : "❌ الـ AI مقدرش يتعرف على الأكلة."); }
 }
@@ -309,6 +313,7 @@ function addMeal() {
     const ratio = g / 100;
     appData.meals.push({ id: Date.now(), name: selectedFood.name, g: g, cal: selectedFood.cal * ratio, pro: selectedFood.p * ratio, carb: selectedFood.c * ratio, fat: selectedFood.f * ratio, pinned: false });
     localStorage.setItem('jm_app_data', JSON.stringify(appData));
+    syncStateToServer(); // مزامنة
     document.getElementById('searchInput').value = ''; document.getElementById('gramsInput').value = ''; selectedFood = null;
     renderProgress(); renderMealsUI(); showToast(appData.lang === 'en' ? "Meal added!" : "تم إضافة الوجبة!");
 }
@@ -316,70 +321,45 @@ function addMeal() {
 function addMealToLog(name, cal, pro, carb, fat) {
     const meal = { id: Date.now(), name: name, g: "AI", cal: Math.round(cal), pro: Math.round(pro), carb: Math.round(carb), fat: Math.round(fat), pinned: false };
     appData.meals.push(meal); localStorage.setItem('jm_app_data', JSON.stringify(appData));
+    syncStateToServer(); // مزامنة
     renderProgress(); renderMealsUI();
 }
 
-function deleteMeal(id) { appData.meals = appData.meals.filter(m => m.id !== id); localStorage.setItem('jm_app_data', JSON.stringify(appData)); renderProgress(); renderMealsUI(); }
-function resetDay() { if (!confirm(appData.lang === 'en' ? "Clear all?" : "مسح الكل؟")) return; appData.meals = []; localStorage.setItem('jm_app_data', JSON.stringify(appData)); renderProgress(); renderMealsUI(); }
+function deleteMeal(id) { appData.meals = appData.meals.filter(m => m.id !== id); localStorage.setItem('jm_app_data', JSON.stringify(appData)); syncStateToServer(); renderProgress(); renderMealsUI(); }
+function resetDay() { if (!confirm(appData.lang === 'en' ? "Clear all?" : "مسح الكل؟")) return; appData.meals = []; localStorage.setItem('jm_app_data', JSON.stringify(appData)); syncStateToServer(); renderProgress(); renderMealsUI(); }
 
 function renderMealsUI() {
     const list = document.getElementById('mealsList'); list.innerHTML = '';
-    appData.meals.forEach(m => {
-        list.innerHTML += `<div class="meal-item"><div><b>${m.name}</b> (${m.g}g)<div class="meal-macros">${m.cal.toFixed(0)} Cal | P:${m.pro.toFixed(1)} | C:${m.carb.toFixed(1)} | F:${m.fat.toFixed(1)}</div></div><button class="delete-btn" onclick="deleteMeal(${m.id})">❌</button></div>`;
-    });
+    appData.meals.forEach(m => { list.innerHTML += `<div class="meal-item"><div><b>${m.name}</b> (${m.g}g)<div class="meal-macros">${m.cal.toFixed(0)} Cal | P:${m.pro.toFixed(1)} | C:${m.carb.toFixed(1)} | F:${m.fat.toFixed(1)}</div></div><button class="delete-btn" onclick="deleteMeal(${m.id})">❌</button></div>`; });
 }
 
-function updateWater(amt) { waterIntake += amt; if (waterIntake < 0) waterIntake = 0; document.getElementById('waterCount').innerText = `${waterIntake} 💧`; }
+function updateWater(amt) { 
+    waterIntake += amt; if (waterIntake < 0) waterIntake = 0; 
+    document.getElementById('waterCount').innerText = `${waterIntake} 💧`; 
+    syncStateToServer(); // مزامنة
+}
 
-// تحديث حالة زرار الصورة بدون خطوط مزعجة
 function updatePhotoStatus() {
-    const input = document.getElementById('progressPhoto'); 
-    const status = document.getElementById('photoStatus');
-    const label = document.getElementById('photoLabel'); // استهداف المربع الخارجي
+    const input = document.getElementById('progressPhoto'); const status = document.getElementById('photoStatus'); const label = document.getElementById('photoLabel');
     const isEn = (appData.lang === 'en');
-    
     if (input && input.files && input.files[0]) { 
-        if(status) { 
-            status.innerHTML = (isEn ? "✅ Selected: " : "✅ تم اختيار الصورة: ") + input.files[0].name.substring(0, 15) + "..."; 
-            status.style.color = "var(--primary)"; 
-        }
-        if(label) {
-            // ينور أخضر خفيف لما تختار صورة
-            label.style.border = "1px solid var(--primary)";
-            label.style.background = "rgba(74, 222, 128, 0.1)";
-        }
+        if(status) { status.innerHTML = (isEn ? "✅ Selected: " : "✅ تم اختيار الصورة: ") + input.files[0].name.substring(0, 15) + "..."; status.style.color = "var(--primary)"; }
+        if(label) { label.style.border = "1px solid var(--primary)"; label.style.background = "rgba(74, 222, 128, 0.1)"; }
     } else { 
-        if(status) { 
-            status.innerHTML = isEn ? "📸 Add Progress Photo (Optional)" : "📸 ضيف صورة تطور (اختياري)"; 
-            status.style.color = "#fff"; 
-        }
-        if(label) {
-            // يرجع لشكله الطبيعي الشيك لو مفيش صورة
-            label.style.border = "1px solid rgba(255,255,255,0.1)";
-            label.style.background = "rgba(0,0,0,0.3)";
-        }
+        if(status) { status.innerHTML = isEn ? "📸 Add Progress Photo (Optional)" : "📸 ضيف صورة تطور (اختياري)"; status.style.color = "#fff"; }
+        if(label) { label.style.border = "1px solid rgba(255,255,255,0.1)"; label.style.background = "rgba(0,0,0,0.3)"; }
     }
 }
 
-// --- دالة عرض سجل التطور ---
 function renderHistoryUI() {
-    const list = document.getElementById('historyList');
-    if (!list) return;
+    const list = document.getElementById('historyList'); if (!list) return;
     const isEn = appData.lang === 'en';
-    
-    if (!appData.history || appData.history.length === 0) {
-        list.innerHTML = `<p style="text-align:center; color:var(--text-secondary); margin-top: 20px;">${uiTranslations[appData.lang].noHistory}</p>`;
-        return;
-    }
-    
+    if (!appData.history || appData.history.length === 0) { list.innerHTML = `<p style="text-align:center; color:var(--text-secondary); margin-top: 20px;">${uiTranslations[appData.lang].noHistory}</p>`; return; }
     let html = "";
     appData.history.forEach(h => {
         html += `<div style="background:rgba(0,0,0,0.2); padding:15px; border-radius:12px; margin-bottom:15px; border:1px solid rgba(255,255,255,0.05);">
             <div style="color:var(--primary); font-weight:bold; margin-bottom:10px; font-size:1.1rem;">📅 ${h.date}</div>
-            <div style="display:flex; justify-content:space-between; margin-bottom:10px; font-size:0.95rem;">
-                <span>🍔 ${isEn ? "Calories" : "السعرات"}: <b>${h.cal}</b></span>
-                <span>💧 ${isEn ? "Water" : "الماية"}: <b>${h.water}</b></span>
-            </div>
+            <div style="display:flex; justify-content:space-between; margin-bottom:10px; font-size:0.95rem;"><span>🍔 ${isEn ? "Calories" : "السعرات"}: <b>${h.cal}</b></span><span>💧 ${isEn ? "Water" : "الماية"}: <b>${h.water}</b></span></div>
             ${h.workouts ? `<div style="font-size:0.85rem; color:var(--text-secondary); white-space:pre-wrap; background:rgba(0,0,0,0.3); padding:10px; border-radius:8px;">🏋️ ${isEn ? "Weights" : "الأوزان"}:\n${h.workouts}</div>` : ''}
         </div>`;
     });
@@ -393,15 +373,9 @@ async function saveDailyLog() {
     if (appData.meals.length > 0) { notes += "\n الأكل المسجل: " + appData.meals.map(m => `${m.name}(${m.g}g)`).join(", "); }
     let workoutsData = appData.dailyWorkouts || "";
     
-    // حفظ التقرير في تاب التطور المحلي للعميل
     let totalCal = appData.meals.reduce((sum, m) => sum + m.cal, 0);
-    appData.history.unshift({
-        date: new Date().toLocaleDateString(isEn ? 'en-GB' : 'ar-EG'),
-        cal: Math.round(totalCal),
-        workouts: workoutsData,
-        water: waterIntake
-    });
-    if(appData.history.length > 30) appData.history.pop(); // بنحتفظ بآخر 30 يوم بس عشان الأبليكيشن ميبقاش تقيل
+    appData.history.unshift({ date: new Date().toLocaleDateString(isEn ? 'en-GB' : 'ar-EG'), cal: Math.round(totalCal), workouts: workoutsData, water: waterIntake });
+    if(appData.history.length > 30) appData.history.pop(); 
     
     let photoUrl = ""; const photoInput = document.getElementById('progressPhoto');
     if (photoInput && photoInput.files[0]) {
@@ -415,9 +389,9 @@ async function saveDailyLog() {
                 showToast(isEn ? "Report sent! 🚀" : "تم إرسال التقرير 🚀"); 
                 document.getElementById('submitBtn').innerText = isEn ? "Send to Coach 🚀" : "ابعت التقرير للكوتش 🚀"; 
                 document.getElementById('dailyNotes').value = ""; appData.dailyWorkouts = ""; 
-                appData.meals = []; // تصفير الأكل بعد الإرسال
-                localStorage.setItem('jm_app_data', JSON.stringify(appData));
-                renderProgress(); renderMealsUI(); renderHistoryUI();
+                appData.meals = []; waterIntake = 0; localStorage.setItem('jm_app_data', JSON.stringify(appData));
+                syncStateToServer(); // تفريغ اليوم من السيرفر بعد الإرسال
+                renderProgress(); renderMealsUI(); renderHistoryUI(); document.getElementById('waterCount').innerText = `0 💧`;
                 if(photoInput) photoInput.value = ""; updatePhotoStatus();
             } else { showToast(isEn ? "Error! Check data." : "حدث خطأ!"); document.getElementById('submitBtn').innerText = isEn ? "Send to Coach 🚀" : "ابعت التقرير للكوتش 🚀"; }
         }).catch(err => { showToast(isEn ? "Server Error" : "خطأ خادم"); document.getElementById('submitBtn').innerText = isEn ? "Send to Coach 🚀" : "ابعت التقرير للكوتش 🚀"; });
@@ -438,45 +412,31 @@ async function analyzeFoodAI(input) {
             let aiText = data.candidates[0].content.parts[0].text.replace(/```json/g, "").replace(/```/g, "").trim();
             const aiResult = JSON.parse(aiText);
             addMealToLog("✨ " + aiResult.name, aiResult.cal, aiResult.pro, aiResult.carb, aiResult.fat);
-            showToast(isEn ? "✅ Food added!" : "✅ تم إضافته!");
-            input.value = "";
+            showToast(isEn ? "✅ Food added!" : "✅ تم إضافته!"); input.value = "";
         } catch (error) { showToast(isEn ? "❌ Couldn't recognize." : "❌ تعذر التعرف."); input.value = ""; }
     };
 }
 
 async function toggleScanner() {
     const container = document.getElementById('scannerContainer');
-    if (isScannerOpen) {
-        if (zxingReader) zxingReader.reset();
-        container.style.display = 'none';
-        isScannerOpen = false;
+    if (isScannerOpen) { if (zxingReader) zxingReader.reset(); container.style.display = 'none'; isScannerOpen = false;
     } else {
-        container.style.display = 'block';
-        isScannerOpen = true;
+        container.style.display = 'block'; isScannerOpen = true;
         if (!zxingReader) zxingReader = new ZXing.BrowserMultiFormatReader();
-        try {
-            zxingReader.decodeFromVideoDevice(null, 'scannerVideo', (result, err) => {
-                if (result) {
-                    zxingReader.reset(); container.style.display = 'none'; isScannerOpen = false;
-                    fetchProductByBarcode(result.text);
-                }
-            });
+        try { zxingReader.decodeFromVideoDevice(null, 'scannerVideo', (result, err) => { if (result) { zxingReader.reset(); container.style.display = 'none'; isScannerOpen = false; fetchProductByBarcode(result.text); } });
         } catch (err) { showToast(appData.lang === 'en' ? "❌ Camera Error" : "❌ خطأ في الكاميرا"); }
     }
 }
 
 async function fetchProductByBarcode(barcode) {
-    const isEn = appData.lang === 'en';
-    showToast(isEn ? "🔍 Searching product..." : "🔍 جاري البحث...");
+    const isEn = appData.lang === 'en'; showToast(isEn ? "🔍 Searching product..." : "🔍 جاري البحث...");
     try {
-        const res = await fetch(`https://world.openfoodfacts.org/api/v0/product/${barcode}.json`);
-        const data = await res.json();
+        const res = await fetch(`https://world.openfoodfacts.org/api/v0/product/${barcode}.json`); const data = await res.json();
         if (data.status === 1) {
             const p = data.product; const name = p.product_name || "Unknown"; const nut = p.nutriments;
             const cal = nut['energy-kcal_100g'] || 0; const pro = nut.proteins_100g || 0; const carb = nut.carbohydrates_100g || 0; const fat = nut.fat_100g || 0;
             selectedFood = { id: Date.now(), name: name + " 🛒", cal: cal, p: pro, c: carb, f: fat };
-            document.getElementById('searchInput').value = name;
-            showToast(isEn ? `✅ Found: ${name}` : `✅ تم العثور على: ${name}`);
+            document.getElementById('searchInput').value = name; showToast(isEn ? `✅ Found: ${name}` : `✅ تم العثور على: ${name}`);
         } else { showToast(isEn ? "❌ Not found." : "❌ غير مسجل."); }
     } catch (err) { showToast(isEn ? "❌ Connection Error." : "❌ خطأ في الاتصال."); }
 }
