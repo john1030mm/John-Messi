@@ -1,5 +1,5 @@
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx3g8BOYwMPgu8s3aJVNtdBHImQxFUbA-ztR-0SEZOq9txLc64yfshCbH4kbwrddfTUjA/exec"; 
-const GEMINI_KEY = "AQ.Ab8RN6JV8vreHKDMUiHMU-KYdIqL4nFrLa4Z68G4TSnqRFiylQ"; // حط مفتاح جوجل هنا
+const GEMINI_KEY = "AIzaSyCcCs1E13ImorYGd7uGMd7QSE83--AFtO0"; // حط مفتاح جوجل هنا
 const IMGBB_KEY = "3b5826821ec6486f42b5f719c97795ff";  
 
 let appData = JSON.parse(localStorage.getItem('jm_app_data')) || { theme: 'dark', lang: 'ar', meals: [], target: null, dailyWorkouts: "", history: [] };
