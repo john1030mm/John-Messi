@@ -1,5 +1,4 @@
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwGwIM-kzvzdNFvlHsthHK4RCGbSUIaaCMVK-tHI_5ZVzilaJnrxaafR9DeLSB1kzfl/exec"; 
-const GEMINI_KEY = "AIzaSyCcCs1E13ImorYGd7uGMd7QSE83--AFtO0"; // حط مفتاح جوجل هنا
 const IMGBB_KEY = "3b5826821ec6486f42b5f719c97795ff";  
 
 let appData = JSON.parse(localStorage.getItem('jm_app_data')) || { theme: 'dark', lang: 'ar', meals: [], target: null, dailyWorkouts: "", history: [] };
@@ -25,7 +24,6 @@ let syncTimer = null;
 function syncStateToServer() {
     if(!currentClientId) return;
     clearTimeout(syncTimer);
-    // هنستنى ثانيتين بعد آخر إضافة عشان مانعملش ضغط على السيرفر
     syncTimer = setTimeout(() => {
         let stateObj = { meals: appData.meals, water: waterIntake, workouts: appData.dailyWorkouts };
         let stateStr = JSON.stringify(stateObj);
@@ -150,12 +148,10 @@ function login() {
                 document.getElementById('coachPlanText').textContent = data.plan || (appData.lang === 'en' ? "Follow the macros." : "التزم بالماكروز المحددة."); 
                 clientWorkoutsData = data.workouts || ""; 
                 
-                // إضافة الترحيب بالاسم
                 const isEn = appData.lang === 'en';
                 const greetEl = document.getElementById('greetingTitle');
                 if(greetEl) greetEl.innerText = isEn ? `Hello, ${data.name}! 👋` : `ازيك يا ${data.name}! 👋`;
 
-                // مزامنة حالة اليوم (عشان لو فتح من جهاز تاني)
                 if (data.savedState) {
                     try {
                         let st = JSON.parse(data.savedState);
@@ -179,7 +175,7 @@ function login() {
                 document.getElementById('bottomNav').style.display = 'flex';
                 
                 renderProgress(); renderMealsUI(); renderWorkoutsUI(); renderHistoryUI(); 
-                document.getElementById('waterCount').innerText = `${waterIntake} 💧`; // تحديث شاشة الماية
+                document.getElementById('waterCount').innerText = `${waterIntake} 💧`; 
                 showToast(isEn ? "Login Successful! 🔥" : "تم الدخول بنجاح! 🔥");
             } else { 
                 showToast(appData.lang === 'en' ? "Invalid Credentials!" : "بيانات غير صحيحة!"); 
@@ -255,7 +251,7 @@ function saveWorkoutLog() {
     if (!hasData) return showToast(appData.lang === 'en' ? "⚠️ Enter weights to save!" : "⚠️ أدخل أوزان للحفظ!");
     appData.dailyWorkouts = (appData.dailyWorkouts || "") + workoutText; 
     localStorage.setItem('jm_app_data', JSON.stringify(appData));
-    syncStateToServer(); // مزامنة للسيرفر
+    syncStateToServer(); 
     showToast(appData.lang === 'en' ? "✅ Weights saved! Go to Dashboard to submit." : "✅ تم حفظ أوزانك بنجاح! اذهب لتاب الخطة واضغط إرسال التقرير."); 
     activateTabByIndex(0);
 }
@@ -290,38 +286,21 @@ function handleSearch() {
     }
 }
 
-async function searchFoodAIText(foodName) {
-    showToast(`✨ ${appData.lang === 'en' ? 'Asking AI...' : 'جاري سؤال الـ AI...'}`);
-    const promptText = `أنت خبير تغذية. قدر السعرات الحرارية والماكروز لـ 100 جرام من "${foodName}". رد بكود JSON فقط بهذا الشكل: {"name": "${foodName}", "cal": السعرات, "pro": البروتين, "carb": الكارب, "fat": الدهون}`;
-    const requestBody = { contents: [{ parts: [{ text: promptText }] }] };
-    try {
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(requestBody) });
-        const data = await response.json();
-        let aiText = data.candidates[0].content.parts[0].text.replace(/```json/g, "").replace(/```/g, "").trim();
-        const aiResult = JSON.parse(aiText);
-        const newFood = { id: Date.now(), name: aiResult.name + " 🌍", cal: aiResult.cal, p: aiResult.pro, c: aiResult.carb, f: aiResult.fat };
-        foodDB.push(newFood); localStorage.setItem('jm_food_db', JSON.stringify(foodDB));
-        selectedFood = newFood; document.getElementById('searchInput').value = newFood.name;
-        showToast(appData.lang === 'en' ? "✅ AI found it! Enter amount." : "✅ الـ AI جابها! دخل الجرامات واضغط إضافة.");
-        fetch(`${SCRIPT_URL}?action=addFood&name=${encodeURIComponent(aiResult.name)}&cal=${aiResult.cal}&p=${aiResult.pro}&c=${aiResult.carb}&f=${aiResult.fat}`).catch(e => console.log("error"));
-    } catch (error) { showToast(appData.lang === 'en' ? "❌ AI couldn't recognize it." : "❌ الـ AI مقدرش يتعرف على الأكلة."); }
-}
-
 function addMeal() {
     const g = parseFloat(document.getElementById('gramsInput').value);
     if (!selectedFood || !g) return showToast(appData.lang === 'en' ? "Select food and amount!" : "اختر أكلة وأدخل الكمية!");
     const ratio = g / 100;
     appData.meals.push({ id: Date.now(), name: selectedFood.name, g: g, cal: selectedFood.cal * ratio, pro: selectedFood.p * ratio, carb: selectedFood.c * ratio, fat: selectedFood.f * ratio, pinned: false });
     localStorage.setItem('jm_app_data', JSON.stringify(appData));
-    syncStateToServer(); // مزامنة
+    syncStateToServer(); 
     document.getElementById('searchInput').value = ''; document.getElementById('gramsInput').value = ''; selectedFood = null;
     renderProgress(); renderMealsUI(); showToast(appData.lang === 'en' ? "Meal added!" : "تم إضافة الوجبة!");
 }
 
-function addMealToLog(name, cal, pro, carb, fat) {
-    const meal = { id: Date.now(), name: name, g: "AI", cal: Math.round(cal), pro: Math.round(pro), carb: Math.round(carb), fat: Math.round(fat), pinned: false };
+function addMealToLog(name, cal, pro, carb, fat, gramsLabel = 'AI') {
+    const meal = { id: Date.now(), name: name, g: gramsLabel, cal: Math.round(cal), pro: Math.round(pro), carb: Math.round(carb), fat: Math.round(fat), pinned: false };
     appData.meals.push(meal); localStorage.setItem('jm_app_data', JSON.stringify(appData));
-    syncStateToServer(); // مزامنة
+    syncStateToServer(); 
     renderProgress(); renderMealsUI();
 }
 
@@ -336,7 +315,7 @@ function renderMealsUI() {
 function updateWater(amt) { 
     waterIntake += amt; if (waterIntake < 0) waterIntake = 0; 
     document.getElementById('waterCount').innerText = `${waterIntake} 💧`; 
-    syncStateToServer(); // مزامنة
+    syncStateToServer(); 
 }
 
 function updatePhotoStatus() {
@@ -390,43 +369,13 @@ async function saveDailyLog() {
                 document.getElementById('submitBtn').innerText = isEn ? "Send to Coach 🚀" : "ابعت التقرير للكوتش 🚀"; 
                 document.getElementById('dailyNotes').value = ""; appData.dailyWorkouts = ""; 
                 appData.meals = []; waterIntake = 0; localStorage.setItem('jm_app_data', JSON.stringify(appData));
-                syncStateToServer(); // تفريغ اليوم من السيرفر بعد الإرسال
+                syncStateToServer(); 
                 renderProgress(); renderMealsUI(); renderHistoryUI(); document.getElementById('waterCount').innerText = `0 💧`;
                 if(photoInput) photoInput.value = ""; updatePhotoStatus();
             } else { showToast(isEn ? "Error! Check data." : "حدث خطأ!"); document.getElementById('submitBtn').innerText = isEn ? "Send to Coach 🚀" : "ابعت التقرير للكوتش 🚀"; }
         }).catch(err => { showToast(isEn ? "Server Error" : "خطأ خادم"); document.getElementById('submitBtn').innerText = isEn ? "Send to Coach 🚀" : "ابعت التقرير للكوتش 🚀"; });
 }
 
-async function analyzeFoodAI(input) {
-    const file = input.files[0]; 
-    if (!file) return;
-    const isEn = appData.lang === 'en';
-    showToast(isEn ? "✨ Analyzing image... ⏳" : "✨ جاري التحليل... ⏳");
-    const reader = new FileReader(); 
-    reader.readAsDataURL(file);
-    reader.onload = async function () {
-        const base64Image = reader.result.split(',')[1];
-        const promptText = `أنت خبير تغذية محترف. حلل صورة الطعام هذه. تعرف على المكونات، قدر الحجم والوزن بالجرامات تقريباً بمجرد النظر، ثم احسب السعرات الحرارية، البروتين، الكاربوهيدرات، والدهون الكلية. رد بكود JSON فقط لا غير بهذا الشكل بالضبط: {"name": "اسم الوجبة والكمية التقريبية", "cal": السعرات, "pro": البروتين, "carb": الكارب, "fat": الدهون}`;
-        const requestBody = { contents: [{ parts: [{ text: promptText }, { inlineData: { mimeType: file.type, data: base64Image } }] }] };
-        try {
-            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`, { 
-                method: "POST", 
-                headers: { "Content-Type": "application/json" }, 
-                body: JSON.stringify(requestBody) 
-            });
-            const data = await response.json();
-            if (data.error) { showToast(isEn ? "❌ API Error." : "❌ خطأ في السيرفر أو المفتاح."); input.value = ""; return; }
-            let aiText = data.candidates[0].content.parts[0].text.replace(/```json/g, "").replace(/```/g, "").trim();
-            const aiResult = JSON.parse(aiText);
-            addMealToLog("✨ " + aiResult.name, aiResult.cal, aiResult.pro, aiResult.carb, aiResult.fat);
-            showToast(isEn ? "✅ Meal calculated & added!" : "✅ تم حساب الوجبة وإضافتها بنجاح!");
-            input.value = ""; 
-        } catch (error) { 
-            showToast(isEn ? "❌ Couldn't recognize the meal." : "❌ الصورة مش واضحة، حاول تصور الطبق تاني."); 
-            input.value = ""; 
-        }
-    };
-}
 async function toggleScanner() {
     const container = document.getElementById('scannerContainer');
     if (isScannerOpen) { if (zxingReader) zxingReader.reset(); container.style.display = 'none'; isScannerOpen = false;
