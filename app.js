@@ -137,11 +137,18 @@ function init() {
 function login() {
     const id = document.getElementById('clientIdInput').value.trim(); const pass = document.getElementById('clientPassInput').value.trim();
     if (!id || !pass) return showToast(appData.lang === 'en' ? "Enter ID and Password!" : "أدخل الكود والباسورد!");
-    // حط السطرين دول جوه دالة login بعد ما الـ data ترجع بنجاح:
-clientWorkoutsData = data.workouts || ""; 
-let hasWorkoutsFlag = data.hasWorkouts; // القيمة الجاية من جوجل شيت (true أو false أو نعم/لا)
-applyWorkoutPermissions(hasWorkoutsFlag);
-  
+      
+.then(data => {
+            if (data.status === 'success') {
+                currentClientId = id; appData.clientPass = pass;
+                appData.target = { cal: data.calories, pro: data.protein, carb: data.carbs, fat: data.fats };
+                document.getElementById('coachPlanText').textContent = data.plan || (appData.lang === 'en' ? "Follow the macros." : "التزم بالماكروز المحددة."); 
+                clientWorkoutsData = data.workouts || ""; 
+                
+                // === حط السطرين دول هنا بالضبط جوه الـ if والـ data متعرّفة صح ===
+                let hasWorkoutsFlag = data.hasWorkouts; 
+                applyWorkoutPermissions(hasWorkoutsFlag);
+              
     document.getElementById('loginBtn').innerText = appData.lang === 'en' ? "Loading..." : "جاري التحميل...";
     fetch(`${SCRIPT_URL}?action=getMacros&clientId=${id}&pass=${pass}`)
         .then(res => res.json())
