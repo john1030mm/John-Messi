@@ -137,17 +137,6 @@ function init() {
 function login() {
     const id = document.getElementById('clientIdInput').value.trim(); const pass = document.getElementById('clientPassInput').value.trim();
     if (!id || !pass) return showToast(appData.lang === 'en' ? "Enter ID and Password!" : "أدخل الكود والباسورد!");
-      
-.then(data => {
-            if (data.status === 'success') {
-                currentClientId = id; appData.clientPass = pass;
-                appData.target = { cal: data.calories, pro: data.protein, carb: data.carbs, fat: data.fats };
-                document.getElementById('coachPlanText').textContent = data.plan || (appData.lang === 'en' ? "Follow the macros." : "التزم بالماكروز المحددة."); 
-                clientWorkoutsData = data.workouts || ""; 
-                
-                // === حط السطرين دول هنا بالضبط جوه الـ if والـ data متعرّفة صح ===
-                let hasWorkoutsFlag = data.hasWorkouts; 
-                applyWorkoutPermissions(hasWorkoutsFlag);
               
     document.getElementById('loginBtn').innerText = appData.lang === 'en' ? "Loading..." : "جاري التحميل...";
     fetch(`${SCRIPT_URL}?action=getMacros&clientId=${id}&pass=${pass}`)
@@ -158,7 +147,10 @@ function login() {
                 appData.target = { cal: data.calories, pro: data.protein, carb: data.carbs, fat: data.fats };
                 document.getElementById('coachPlanText').textContent = data.plan || (appData.lang === 'en' ? "Follow the macros." : "التزم بالماكروز المحددة."); 
                 clientWorkoutsData = data.workouts || ""; 
-                
+
+              let hasWorkoutsFlag = data.hasWorkouts; 
+                applyWorkoutPermissions(hasWorkoutsFlag);
+              
                 const isEn = appData.lang === 'en';
                 const greetEl = document.getElementById('greetingTitle');
                 if(greetEl) greetEl.innerText = isEn ? `Hello, ${data.name}! 👋` : `ازيك يا ${data.name}! 👋`;
