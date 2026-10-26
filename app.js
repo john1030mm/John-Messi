@@ -137,11 +137,6 @@ function init() {
 function login() {
     const id = document.getElementById('clientIdInput').value.trim(); const pass = document.getElementById('clientPassInput').value.trim();
     if (!id || !pass) return showToast(appData.lang === 'en' ? "Enter ID and Password!" : "أدخل الكود والباسورد!");
-    
-    // حط السطرين دول جوه دالة login بعد ما الـ data ترجع بنجاح:
-clientWorkoutsData = data.workouts || ""; 
-let hasWorkoutsFlag = data.hasWorkouts; // القيمة الجاية من جوجل شيت (true أو false أو نعم/لا)
-applyWorkoutPermissions(hasWorkoutsFlag);
   
     document.getElementById('loginBtn').innerText = appData.lang === 'en' ? "Loading..." : "جاري التحميل...";
     fetch(`${SCRIPT_URL}?action=getMacros&clientId=${id}&pass=${pass}`)
@@ -404,22 +399,6 @@ async function fetchProductByBarcode(barcode) {
         } else { showToast(isEn ? "❌ Not found." : "❌ غير مسجل."); }
     } catch (err) { showToast(isEn ? "❌ Connection Error." : "❌ خطأ في الاتصال."); }
 }
-// دالة لتحديد إظهار أو إخفاء تبويب التمارين أوتوماتيك
-function applyWorkoutPermissions(flag) {
-    // التحقق لو القيمة false أو "لا" أو "0"
-    const isNoWorkout = (flag === false || flag === "false" || flag === "لا" || flag === "0" || flag === 0);
-    
-    // إخفاء زر التمارين من الشريط السفلي (Navigation)
-    const navWorkoutsBtn = document.querySelector('.nav-item[onclick*="workouts"]');
-    if (navWorkoutsBtn) {
-        navWorkoutsBtn.style.display = isNoWorkout ? 'none' : 'flex';
-    }
-    
-    // إخفاء محتوى صفحة التمارين لو العميل فتحها
-    const workoutsTabContent = document.getElementById('tab-workouts');
-    if (workoutsTabContent && isNoWorkout) {
-        workoutsTabContent.style.display = 'none';
-    }
 }
 
 init();
