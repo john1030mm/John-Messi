@@ -137,7 +137,12 @@ function init() {
 function login() {
     const id = document.getElementById('clientIdInput').value.trim(); const pass = document.getElementById('clientPassInput').value.trim();
     if (!id || !pass) return showToast(appData.lang === 'en' ? "Enter ID and Password!" : "أدخل الكود والباسورد!");
-              
+    
+    // حط السطرين دول جوه دالة login بعد ما الـ data ترجع بنجاح:
+clientWorkoutsData = data.workouts || ""; 
+let hasWorkoutsFlag = data.hasWorkouts; // القيمة الجاية من جوجل شيت (true أو false أو نعم/لا)
+applyWorkoutPermissions(hasWorkoutsFlag);
+  
     document.getElementById('loginBtn').innerText = appData.lang === 'en' ? "Loading..." : "جاري التحميل...";
     fetch(`${SCRIPT_URL}?action=getMacros&clientId=${id}&pass=${pass}`)
         .then(res => res.json())
@@ -148,9 +153,6 @@ function login() {
                 document.getElementById('coachPlanText').textContent = data.plan || (appData.lang === 'en' ? "Follow the macros." : "التزم بالماكروز المحددة."); 
                 clientWorkoutsData = data.workouts || ""; 
 
-             // الموقع هيشيك هل العميل عنده تمارين فعلاً ولا الخانة فاضية
-                applyWorkoutPermissions(data.workouts);
-              
                 const isEn = appData.lang === 'en';
                 const greetEl = document.getElementById('greetingTitle');
                 if(greetEl) greetEl.innerText = isEn ? `Hello, ${data.name}! 👋` : `ازيك يا ${data.name}! 👋`;
@@ -176,7 +178,7 @@ function login() {
                 document.getElementById('loginSection').style.display = 'none';
                 document.getElementById('mainApp').style.display = 'block';
                 document.getElementById('bottomNav').style.display = 'flex';
-                
+
                 renderProgress(); renderMealsUI(); renderWorkoutsUI(); renderHistoryUI(); 
                 document.getElementById('waterCount').innerText = `${waterIntake} 💧`; 
                 showToast(isEn ? "Login Successful! 🔥" : "تم الدخول بنجاح! 🔥");
@@ -206,7 +208,7 @@ function renderWorkoutsUI() {
         }
         const parts = line.split('|'); const exName = parts[0] ? parts[0].trim() : `تمرين`; const setsCount = parseInt(parts[1]) || 3; const targetReps = parts[2] ? parts[2].trim() : "10-12"; const videoUrl = parts[3] ? parts[3].trim() : "";
         if (!currentDayOpen) { html += `<details open style="background: rgba(0,0,0,0.2); border: 1px solid var(--glass-border); border-radius: 15px; padding: 15px; margin-bottom: 15px;"><summary style="font-weight: bold; font-size: 1.2rem; color: var(--primary); cursor: pointer; list-style: none;">📅 تمارين الأسبوع</summary><div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.1);">`; currentDayOpen = true; }
-        
+
         const safeName = exName.replace(/"/g, '&quot;');
         html += `<div class="exercise-card" data-ex-name="${safeName}" style="background: rgba(255,255,255,0.03); border-radius: 12px; padding: 15px; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.05);">
             <div class="exercise-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
@@ -354,17 +356,17 @@ async function saveDailyLog() {
     let notes = document.getElementById('dailyNotes').value;
     if (appData.meals.length > 0) { notes += "\n الأكل المسجل: " + appData.meals.map(m => `${m.name}(${m.g}g)`).join(", "); }
     let workoutsData = appData.dailyWorkouts || "";
-    
+
     let totalCal = appData.meals.reduce((sum, m) => sum + m.cal, 0);
     appData.history.unshift({ date: new Date().toLocaleDateString(isEn ? 'en-GB' : 'ar-EG'), cal: Math.round(totalCal), workouts: workoutsData, water: waterIntake });
     if(appData.history.length > 30) appData.history.pop(); 
-    
+
     let photoUrl = ""; const photoInput = document.getElementById('progressPhoto');
     if (photoInput && photoInput.files[0]) {
         const formData = new FormData(); formData.append("image", photoInput.files[0]);
         try { const imgRes = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_KEY}`, { method: 'POST', body: formData }); photoUrl = (await imgRes.json()).data.url; } catch(e) {}
     }
-    
+
     fetch(`${SCRIPT_URL}?action=saveLog&clientId=${currentClientId}&pass=${encodeURIComponent(appData.clientPass || "")}&water=${waterIntake}&notes=${encodeURIComponent(notes)}&photoUrl=${encodeURIComponent(photoUrl)}&workouts=${encodeURIComponent(workoutsData)}`)
         .then(res => res.json()).then(data => {
             if (data.status === 'success') { 
@@ -402,20 +404,21 @@ async function fetchProductByBarcode(barcode) {
         } else { showToast(isEn ? "❌ Not found." : "❌ غير مسجل."); }
     } catch (err) { showToast(isEn ? "❌ Connection Error." : "❌ خطأ في الاتصال."); }
 }
-function applyWorkoutPermissions(workoutsData) {
-    // لو خانة التمارين فاضية تماماً، إذن العميل ده (أكل فقط)
-    const isNoWorkout = (!workoutsData || workoutsData.trim() === "");
+// دالة لتحديد إظهار أو إخفاء تبويب التمارين أوتوماتيك
+function applyWorkoutPermissions(flag) {
+    // التحقق لو القيمة false أو "لا" أو "0"
+    const isNoWorkout = (flag === false || flag === "false" || flag === "لا" || flag === "0" || flag === 0);
     
-    // إخفاء أو إظهار زر التمارين من الشريط السفلي
+    // إخفاء زر التمارين من الشريط السفلي (Navigation)
     const navWorkoutsBtn = document.querySelector('.nav-item[onclick*="workouts"]');
     if (navWorkoutsBtn) {
         navWorkoutsBtn.style.display = isNoWorkout ? 'none' : 'flex';
     }
     
-    // إخفاء محتوى صفحة التمارين لو العميل فتحها بالغلط
+    // إخفاء محتوى صفحة التمارين لو العميل فتحها
     const workoutsTabContent = document.getElementById('tab-workouts');
-    if (workoutsTabContent) {
-        workoutsTabContent.style.display = isNoWorkout ? 'none' : 'block';
+    if (workoutsTabContent && isNoWorkout) {
+        workoutsTabContent.style.display = 'none';
     }
 }
 
