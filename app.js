@@ -399,6 +399,5 @@ async function fetchProductByBarcode(barcode) {
         } else { showToast(isEn ? "❌ Not found." : "❌ غير مسجل."); }
     } catch (err) { showToast(isEn ? "❌ Connection Error." : "❌ خطأ في الاتصال."); }
 }
-}
 
 init();
