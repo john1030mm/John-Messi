@@ -148,8 +148,8 @@ function login() {
                 document.getElementById('coachPlanText').textContent = data.plan || (appData.lang === 'en' ? "Follow the macros." : "التزم بالماكروز المحددة."); 
                 clientWorkoutsData = data.workouts || ""; 
 
-              let hasWorkoutsFlag = data.hasWorkouts; 
-                applyWorkoutPermissions(hasWorkoutsFlag);
+             // الموقع هيشيك هل العميل عنده تمارين فعلاً ولا الخانة فاضية
+                applyWorkoutPermissions(data.workouts);
               
                 const isEn = appData.lang === 'en';
                 const greetEl = document.getElementById('greetingTitle');
@@ -402,21 +402,20 @@ async function fetchProductByBarcode(barcode) {
         } else { showToast(isEn ? "❌ Not found." : "❌ غير مسجل."); }
     } catch (err) { showToast(isEn ? "❌ Connection Error." : "❌ خطأ في الاتصال."); }
 }
-// دالة لتحديد إظهار أو إخفاء تبويب التمارين أوتوماتيك
-function applyWorkoutPermissions(flag) {
-    // التحقق لو القيمة false أو "لا" أو "0"
-    const isNoWorkout = (flag === false || flag === "false" || flag === "لا" || flag === "0" || flag === 0);
+function applyWorkoutPermissions(workoutsData) {
+    // لو خانة التمارين فاضية تماماً، إذن العميل ده (أكل فقط)
+    const isNoWorkout = (!workoutsData || workoutsData.trim() === "");
     
-    // إخفاء زر التمارين من الشريط السفلي (Navigation)
+    // إخفاء أو إظهار زر التمارين من الشريط السفلي
     const navWorkoutsBtn = document.querySelector('.nav-item[onclick*="workouts"]');
     if (navWorkoutsBtn) {
         navWorkoutsBtn.style.display = isNoWorkout ? 'none' : 'flex';
     }
     
-    // إخفاء محتوى صفحة التمارين لو العميل فتحها
+    // إخفاء محتوى صفحة التمارين لو العميل فتحها بالغلط
     const workoutsTabContent = document.getElementById('tab-workouts');
-    if (workoutsTabContent && isNoWorkout) {
-        workoutsTabContent.style.display = 'none';
+    if (workoutsTabContent) {
+        workoutsTabContent.style.display = isNoWorkout ? 'none' : 'block';
     }
 }
 
